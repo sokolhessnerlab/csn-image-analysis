@@ -3,24 +3,35 @@ title: "R Notebook for Validation Analysis"
 output: html_notebook
 ---
 
-Load pacakges
+# Validation Thresholds Analysis
+
+## Load pacakges
 
 ```{r}
+library(dplyr)
 library(ggplot2)
 library(hash)
 ```
 
-Constants
+## Constants
 
 ```{r}
+# Validation details
+MAX_THRESHOLD<- 5
+
+# Colors for plotting
 COLORS <- hash()
 COLORS[["BLACK"]] <- "#2F2F2F"
+COLORS[["GRAY"]] <- "#5C6D70"
 COLORS[["BLUE"]] <- "#0E79B2"
 COLORS[["ORANGE"]] <- "#F39237"
 ```
 
 Begin by setting the working directory and important top-level paths to data and 
 loading necessary packages.
+
+- NOTE: This will be changed to dynamically account for the package `shlab.imgct` via
+  its GitHub instance later. For now, it is using development loading.
 
 ```{r}
 # Set the working directory to be part of S Drive (may make dynamic later?)
@@ -49,5 +60,97 @@ ggplot(valid_df, aes(x=total_valid)) +
   geom_histogram(binwidth=1, color=COLORS[["BLACK"]], fill=COLORS[["BLUE"]])
 ```
 
+Categorize at each threshold and assign to list, where list element indices are threshold values plus one (to be R-like)
 
+```{r}
+ct_df_list <- purrr::map(1:(MAX_THRESHOLD + 1), function(x) {
+  th <- x - 1
+  df <- shlab.imgct::categorize(datapath, threshold = th)
+  df$threshold <- as.factor(th)
+  ct_df_list[[x]] <- df
+})
+```
+
+Bind rows of the dataframes from the above list to make a single dataframe with "image_id" and "threshold" behaving as a multi-index of sorts for plotting and analysis. Also, create dataframe "mu" of means of ratings per threshold.
+
+```{r}
+ct_df_bind <- dplyr::bind_rows(ct_df_list[1:6]) %>%
+  dplyr::arrange(desc(threshold))
+
+mu <- ct_df_bind %>%
+  dplyr::group_by(threshold) %>% 
+  dplyr::summarise(mu_ratings = mean(n_ratings), .groups = "drop") %>%
+  dplyr::arrange(desc(threshold))
+```
+
+Plot distribution of rating counts relative to each threshold with means.
+
+```{r}
+p <- ggplot(ct_df_bind , aes(x=n_ratings, fill=threshold)) + 
+  geom_histogram(binwidth=1, color=COLORS[["GRAY"]], alpha=0.5, aes(y = ..density..), position="identity") +
+  geom_vline(data=mu, aes(xintercept=mu_ratings, color=threshold),
+             linetype="dashed")
+
+p + labs(title="Distribution of Image Ratings", x="Number of Ratings", y="Density") +
+  scale_x_continuous(breaks=c(0,2,4,6,8,10,12)) +
+  theme_classic() +
+  theme(legend.position="top")
+```
+Above is the distribution of rating counts per image across the six possible validation thresholds. As expected, increasing values of threshold from 0 to 5 move the density of ratings leftward. I’ve included vertical dashed lines representing means of ratings for each threshold, where the line color and shade color of bars match. Some thoughts:
+
+1. Clearly, we can’t use a threshold of 0. 
+2. A threshold of 1, 2, or 3 gets us in the ballpark of about 8-9 ratings per image on average. A threshold of 4 gets us down to 7-8 ratings per image, and 5 gets us just below 6 ratings per image. 
+3. The variance on a validation threshold of 5 is clearly massive, and is the only threshold to lower the number of ratings for any block to sub-4.
+4. Thresholds of 3 or 4 will likely be our best bet, but will wait to further evaluate which of those based on the relative heterogeneity distributions.
+
+## Calculate heterogeneity indices
+
+For all rows in the binded dataframe, calculate the htg_index and assign a column for it.
+
+```{r}
+htg_df <- ct_df_bind %>%
+  dplyr::mutate(
+    htg_index = select(., -c(image_id, n_ratings, threshold)) %>%
+      purrr::pmap_dbl(~shlab.imgct::calculate_htg_index(c(...)))
+    ) %>%
+  dplyr::mutate_at(vars(n_ratings), funs(as.factor))
+```
+
+Below are two other visualizations:
+
+1. The scatter plot visualization we discussed that gives a sense of how heterogeneity changes with increasing thresholds of validation, and
+2. The distribution of counts of fully homogeneous responses, where
+
+Heterogeneity speaks to the level of variation among ratings for a given image in the normalized range [0,1], where 0 is fully homogeneous and 0 is fully heterogeneous.
+
+In (1) I’ve included the number of ratings per image as a factor, color-coded in the legend to the right. It further demonstrates that thresholds of 1, 2, and 5 are probably not ideal, while 3 or 4 look like prime candidates. For reference, noting exception of one participant thrown out during cleaning for the multi-selection issue:
+- Threshold of 3 leaves of us with 147 participants’ responses out of 187, so 78.6% of responses
+- Threshold of 4 leaves us with 136 participants’ responses out of 187, so 72.7% of responses
+
+```{r}
+p <- ggplot(htg_df, aes(x=threshold, y=htg_index, color=n_ratings)) + 
+  geom_point()
+
+p <- p + labs(title="Distribution of Heterogeneity By Threshold", x="Validation Threshold", y="Heterogeneity Index") +
+  theme_classic() +
+  theme(legend.position="right")
+
+p
+```
+
+```{r}
+htg_0_df <- htg_df %>% 
+  dplyr::filter(htg_index == 0) %>%
+  dplyr::mutate_at(vars(threshold), funs(as.integer(as.character(.))))
+```
+
+```{r}
+p <- ggplot(data = htg_0_df , aes(x=threshold)) + 
+  geom_histogram(binwidth=1, color=COLORS[["GRAY"]], fill=COLORS[["ORANGE"]], alpha=0.7)
+
+p <- p + labs(title="Distribution of Homogeneity by Threshold", x="Validation Threshold", y="Count") +
+  scale_x_continuous(breaks=c(0,1,2,3,4,5)) +
+  theme_classic()
+p
+```
 
