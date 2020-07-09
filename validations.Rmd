@@ -1,11 +1,14 @@
 ---
 title: "R Notebook for Validation Analysis"
-output: html_notebook
+author: "Ari Dyckovsky"
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 # Validation Thresholds Analysis
 
-## Load pacakges
+## Load packages
 
 ```{r}
 library(dplyr)
@@ -18,7 +21,8 @@ library(hash)
 
 ```{r}
 # Validation details
-MAX_THRESHOLD<- 5
+MAX_THRESHOLD <- 5
+THRESHOLD_INDEX <- 1:(MAX_THRESHOLD + 1)
 
 # Colors for plotting
 COLORS <- hash()
@@ -57,14 +61,20 @@ valid_df <- shlab.imgct::validate_all_participants(datapath)
 Plot the distribution of validation counts across participants.
 
 ```{r}
-ggplot(valid_df, aes(x=total_valid)) + 
-  geom_histogram(binwidth=1, color=COLORS[["BLACK"]], fill=COLORS[["BLUE"]])
+p <- ggplot(valid_df, aes(x=total_valid)) + 
+  geom_histogram(binwidth=1, color=COLORS[["GRAY"]], fill=COLORS[["BLUE"]], alpha=0.7)
+
+p + labs(title="Distribution of Validation Counts", x="Total Valid", y="Count") +
+  scale_x_continuous(breaks=c(0,1,2,3,4,5)) +
+  theme_classic() +
+  theme(legend.position="top")
 ```
 
 Categorize at each threshold and assign to list, where list element indices are threshold values plus one (to be R-like)
 
 ```{r}
-ct_df_list <- purrr::map(1:(MAX_THRESHOLD + 1), function(x) {
+ct_df_list <- list()
+ct_df_list <- purrr::map(THRESHOLD_INDEX, function(x) {
   th <- x - 1
   df <- shlab.imgct::categorize(datapath, threshold = th)
   df$threshold <- as.factor(th)
@@ -75,7 +85,7 @@ ct_df_list <- purrr::map(1:(MAX_THRESHOLD + 1), function(x) {
 Bind rows of the dataframes from the above list to make a single dataframe with "image_id" and "threshold" behaving as a multi-index of sorts for plotting and analysis. Also, create dataframe "mu" of means of ratings per threshold.
 
 ```{r}
-ct_df_bind <- dplyr::bind_rows(ct_df_list[1:6]) %>%
+ct_df_bind <- dplyr::bind_rows(ct_df_list[THRESHOLD_INDEX]) %>%
   dplyr::arrange(desc(threshold))
 
 mu <- ct_df_bind %>%
@@ -139,11 +149,15 @@ p <- p + labs(title="Distribution of Heterogeneity By Threshold", x="Validation 
 p
 ```
 
+Filter for heterogeneity indices of 0, meaning fully homogenous.
+
 ```{r}
 htg_0_df <- htg_df %>% 
   dplyr::filter(htg_index == 0) %>%
   dplyr::mutate_at(vars(threshold), funs(as.integer(as.character(.))))
 ```
+
+Plot the histogram of counts for homogeneity by varying validation threshold.
 
 ```{r}
 p <- ggplot(data = htg_0_df , aes(x=threshold)) + 
