@@ -1,0 +1,281 @@
+---
+title: "R Notebook for Categorization Analysis"
+author: "Ari Dyckovsky"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+# Categorization Analysis
+
+## Load packages
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(hash)
+```
+
+## Constants
+
+```{r}
+VALIDATION_THRESHOLD = 4
+
+# Colors for plotting
+COLORS <- hash()
+COLORS[["WHITE"]] <- "#FFFFFF"
+COLORS[["BLACK"]] <- "#2F2F2F"
+COLORS[["GRAY"]] <- "#5C6D70"
+COLORS[["BLUE"]] <- "#0E79B2"
+COLORS[["GREEN"]] <- "#6FD08C"
+COLORS[["ORANGE"]] <- "#F39237"
+
+# For formatting doubles
+options(digits = 2)
+```
+
+
+## Set datapath and load `shlab.imgct`
+
+Currently pulling from local, but will make dynamic for other machines later.
+
+```{r}
+# Set the working directory to be part of S Drive (may make dynamic later?)
+# Whilst not dynamic, change for own session if mount point is not equivalent on
+# local machine
+shared_dir <- "~/Projects/shlab/mounts/imgct"
+package_dir <- "~/Projects/shlab"
+
+datapath <- file.path(shared_dir, "csn_images")
+imgct_package_path <- file.path(package_dir, "shlab.imgct")
+
+# Make sure that devtools, tidyverse are installed before this call
+devtools::load_all(imgct_package_path)
+```
+
+## Load category data 
+
+```{r}
+
+counted_responses_cols = readr::cols(
+  image_id = readr::col_character(),
+  .default = readr::col_integer()
+)
+
+counted_df <- shlab.imgct::load_result(datapath, 
+                                       stringr::str_c("categorized_", VALIDATION_THRESHOLD, "_valid"), 
+                                       columns = counted_responses_cols)
+
+# Determine category names from table
+category_names <- counted_df %>% 
+  dplyr::select(-c(image_id, n_ratings)) %>%
+  names()
+
+# Include max_rating for further analyses
+counted_df <- counted_df %>%
+  dplyr::mutate(
+    max_rating = pmax(!!!rlang::syms(category_names))    
+  )
+
+# Include htg_index
+counted_df <- counted_df %>%
+  dplyr::mutate(
+    htg_index = select(., category_names) %>%
+      purrr::pmap_dbl(~shlab.imgct::calculate_htg_index(c(...)))
+    )
+
+head(counted_df)
+```
+
+## Threshold-based Categorization
+
+Functions for evaluating the harsh and semi-harsh threshold types of categorization for a given image based on number of responses.
+
+```{r}
+# Function to choose category with harsh threshold for maximum
+#   - Does not allow for ties, only unique maximum as named category or Other.
+choose_category_max_threshold <- function(ratings) {
+  
+  # count number of ratings equal to maximum rating
+  n_max <- length(which(ratings == max(ratings)))
+  if (n_max > 1) {
+    return("Other")
+  } else {
+    return(names(ratings)[which.max(ratings)])
+  }
+  
+}
+
+# Function to choose category with semi-harsh threshold for maximum
+#   - Does allow for ties, so unique maximum as named category, tied maxima as list category, or Other.
+choose_category_ties_threshold <- function(ratings) {
+  return(stringr::str_c(
+    names(ratings)[which(ratings == max(ratings))],
+    collapse=" & "
+  ))
+}
+```
+
+Determine the category dataframe including both the harsh (category_max) and semi-harsh (category_ties) columns, which are character and list of character types respectively.
+
+```{r}
+category_df <- counted_df %>%
+  dplyr::mutate(
+    
+    category_max = dplyr::select(., category_names) %>%
+      purrr::pmap_chr(
+        ., 
+        ~ choose_category_max_threshold(c(...))
+      ),
+    
+    category_ties = dplyr::select(., category_names) %>%
+      purrr::pmap_chr(
+        .,
+        ~ choose_category_ties_threshold(c(...))
+      )
+    
+  ) %>%
+  dplyr::select(image_id, category_max, category_ties)
+
+category_df
+```
+
+### Plot Harsh Categories
+
+```{r}
+p <- ggplot(category_df, aes(x=category_max)) +
+  geom_bar(color=COLORS[["GRAY"]], fill=COLORS[["BLUE"]], alpha=0.7)
+
+p + labs(title="Distribution of Harsh Categorization Counts", x="Category", y="Count") +
+  theme_classic() 
+```
+
+### Plot Semi-Harsh Categories
+
+```{r}
+p <- ggplot(category_df, aes(y=category_ties)) +
+  geom_bar(color=COLORS[["GRAY"]], fill=COLORS[["ORANGE"]], alpha=0.7)
+
+p + labs(title="Distribution of Semi-Harsh Categorization Counts", x="Count", y="Category") +
+  theme_classic() 
+```
+
+```{r}
+only_ties_df <- category_df %>%
+  dplyr::filter(!(category_ties %in% c(category_names)))
+
+p <- ggplot(only_ties_df, aes(y=category_ties)) +
+  geom_bar(color=COLORS[["GRAY"]], fill=COLORS[["ORANGE"]], alpha=0.7)
+
+p + labs(title="Distribution of Category Ties", x="Count", y="Category") +
+  theme_classic()
+```
+
+## Normalization-based Categorization
+
+### Sum normalization
+
+```{r}
+normalized_sum_df <- counted_df %>%
+  dplyr::mutate_at(vars(category_names), ~ . / n_ratings) %>%
+  dplyr::select(-c(n_ratings, max_rating))
+
+normalized_sum_df
+```
+
+### Plot Sum-Normalization
+
+```{r}
+norm_sum_long <- normalized_sum_df %>% 
+  tidyr::pivot_longer(
+    -c(image_id, htg_index),
+    names_to = "category",
+    values_to = "density"
+  ) %>%
+  dplyr::arrange(desc(density), category) %>%
+  dplyr::mutate(sort_id = match(image_id, unique(image_id))) %>%
+  dplyr::arrange(category, desc(density))
+
+norm_sum_long
+```
+
+```{r}
+p <- ggplot(norm_sum_long, aes(x=sort_id, y=category, alpha=density, size=density)) +
+  geom_point(aes(color = htg_index))
+
+p <- p + labs(
+    title = "Sum-Normed Densities of Image Categorizations",
+    x = "Images",
+    y = "Category",
+    color = "Heterogeneity"
+  ) +
+  scale_x_continuous(breaks = c(0, 3600)) +
+  scale_alpha_continuous(range = c(0.005, 0.1)) +
+  scale_size_continuous(range = c(0,2)) +
+  scale_color_gradient(low = COLORS[["GREEN"]], high = COLORS[["BLUE"]]) +
+  guides(
+    alpha = FALSE,
+    size = FALSE
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "bottom",
+    legend.justification = c("left"),
+    legend.key.width = unit(2, "cm")
+  )
+
+p
+```
+
+```{r}
+p <- ggplot(norm_sum_long %>% dplyr::filter(htg_index > 0), aes(x=sort_id, y=category, alpha=density, size=density)) +
+  geom_point(aes(color = htg_index))
+
+p <- p + labs(
+    title = "Sum-Normed Densities of Image Categorizations (Non-Homogeneous)",
+    x = "Images",
+    y = "Category",
+    color = "Heterogeneity"
+  ) +
+  scale_alpha_continuous(range = c(0.005, 0.1)) +
+  scale_size_continuous(range = c(0,2)) +
+  scale_color_gradient(low = COLORS[["GREEN"]], high = COLORS[["BLUE"]]) +
+  guides(
+    alpha = FALSE,
+    size = FALSE
+  ) +
+  theme_classic() +
+  theme(
+    #axis.text.x = element_blank(),
+    legend.position = "bottom",
+    legend.justification = c("left"),
+    legend.key.width = unit(2, "cm")
+  )
+
+p
+```
+
+
+### Max normalization
+
+```{r}
+normalized_max_df <- counted_df %>%
+  dplyr::mutate_at(vars(category_names), ~ . / max_rating) %>%
+  dplyr::select(-c(n_ratings, max_rating))
+
+normalized_max_df
+```
+
+### Plot Max Normalization
+
+```{r}
+max_long <- normalized_max_df %>% 
+  tidyr::pivot_longer(
+    -image_id,
+    names_to = "category",
+    values_to = "density"
+  )
+
+max_long
+```

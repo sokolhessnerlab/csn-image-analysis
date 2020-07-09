@@ -1,0 +1,169 @@
+---
+title: "R Notebook for Emotion Rating Database Analysis"
+author: "Ari Dyckovsky"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+# Categorization Analysis
+
+## Load packages
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(hash)
+library(readr)
+```
+
+## Constants
+
+```{r}
+# Prevalence measures
+HOMOSEXUAL_PREVALENCE = 0.1
+HETEORSEXUAL_PREVALENCE = 0.9
+HOMOSEXUAL_TAG = "_ho"
+
+# For formatting doubles
+options(digits = 2)
+```
+
+## Set datapath and load `shlab.imgct`
+
+Currently pulling from local, but will make dynamic for other machines later.
+
+```{r}
+# Set the working directory to be part of S Drive (may make dynamic later?)
+# Whilst not dynamic, change for own session if mount point is not equivalent on
+# local machine
+shared_dir <- "~/Projects/shlab/mounts/imgct"
+package_dir <- "~/Projects/shlab"
+
+datapath <- file.path(shared_dir, "csn_images")
+imgct_package_path <- file.path(package_dir, "shlab.imgct")
+
+# Make sure that devtools, tidyverse are installed before this call
+devtools::load_all(imgct_package_path)
+```
+
+## Load Database Imports
+
+```{r}
+oasis_df <- shlab.imgct::load_imported_xlsx(datapath, "oasis_emotion_ratings")
+iaps_df <- shlab.imgct::load_imported_xlsx(datapath, "iaps_emotion_ratings")
+naps_be_df <- shlab.imgct::load_imported_xlsx(datapath, "naps_be_emotion_ratings")
+naps_ero_df <- shlab.imgct::load_imported_xlsx(datapath, "naps_ero_emotion_ratings")
+```
+
+### Handle Lack of General Ratings for NAPS ERO dataset
+
+Provided that NAPS ERO has specified arousal and valence ratings for four groups, but no general rating of arousal and valence, we must choose an averaging strategy. We will attempt a weighted average with rough prevelance estimates, based on these four groups:
+
+1. HoF (Homosexual Female)
+2. HoM (Homosexual Male)
+3. HeF (Heterosexual Female)
+4. HeM (Heterosexual Male)
+
+Constants for prevalence are determined above, and below is a function for weighted ratings based upon the columns of NAPS ERO where "_ho" and "_he" are tags for homosexual and heterosexual, respectively.
+
+```{r}
+weighted_rating <- function(ratings) {
+  columns <- names(ratings)
+  
+  # Weights are distributed to tags such that:
+  #   - FALSE = HETEROSEXUAL_PREVALENCE
+  #   - TRUE = HOMOSEXUAL_PREVALENCE
+  weights <- c(
+    HETEORSEXUAL_PREVALENCE,
+    HOMOSEXUAL_PREVALENCE
+  )
+  
+  tags <- stringr::str_detect(columns, HOMOSEXUAL_TAG)
+  weights_vec <- weights[1 + tags]
+
+  weighted.mean(
+    ratings,
+    weights_vec
+  )
+}
+```
+
+Mutate new columns of general arousal and valence ratings for NAPS ERO.
+
+```{r}
+naps_ero_df <- naps_ero_df %>%
+  dplyr::mutate(
+    arousal = dplyr::select(., starts_with("arousal")) %>%
+      purrr::pmap_dbl(
+        .,
+        ~ weighted_rating(c(...))
+      ),
+    valence = dplyr::select(., starts_with("valence")) %>%
+      purrr::pmap_dbl(
+        .,
+        ~ weighted_rating(c(...))
+      )
+  ) %>%
+  dplyr::relocate(
+    c(arousal, valence),
+    .after = image_id
+  )
+```
+
+## Merge dataframes
+
+```{r}
+all_emotion_ratings_df <- dplyr::bind_rows(
+    list(
+      oasis_df,
+      iaps_df,
+      naps_be_df,
+      naps_ero_df
+    ),
+    .id = "db_id"
+  ) %>%
+  dplyr::select(db_id, image_id, arousal, valence) %>%
+  dplyr::mutate_at(
+    vars(db_id),
+    ~dplyr::recode(
+      .,
+      "1" = "OASIS",
+      "2" = "IAPS",
+      "3" = "NAPS_BE",
+      "4" = "NAPS_ERO"
+    )
+  )
+
+all_emotion_ratings_df
+```
+
+```{r}
+p <- ggplot(all_emotion_ratings_df, aes(x=arousal, y=valence, color=db_id)) +
+  geom_point(alpha = 0.5)
+
+p <- p + labs(
+    title = "Valence vs. Arousal of Database Images",
+    x = "Arousal",
+    y = "Valence",
+    color = "Source"
+  ) +
+  theme_classic()
+
+p
+```
+
+
+## Save to results as general TSV of arousal and valence ratings
+
+```{r}
+readr::write_tsv(
+  all_emotion_ratings_df,
+  file.path(datapath, "results", "general_emotion_ratings.tsv"),
+  append = FALSE,
+  col_names = TRUE
+)
+```
+
