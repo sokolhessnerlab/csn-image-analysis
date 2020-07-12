@@ -42,7 +42,12 @@ COLORS[["GRAY"]] <- "#5C6D70"
 COLORS[["BLUE"]] <- "#0E79B2"
 COLORS[["GREEN"]] <- "#6FD08C"
 COLORS[["ORANGE"]] <- "#F39237"
+
+# For formatting doubles
+options(digits = 2)
 ```
+
+## Set datapath and load `shlab.imgct`
 
 Begin by setting the working directory and important top-level paths to data and 
 loading necessary packages.

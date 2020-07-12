@@ -1,25 +1,10 @@
----
-title: "R Notebook for Categorization Analysis"
-author: "Ari Dyckovsky"
-output:
-  md_document:
-    variant: markdown_github
----
+Categorization Analysis
+=======================
 
-# Categorization Analysis
+Load packages
+-------------
 
-```{r, setup, include=FALSE}
-knitr::opts_chunk$set(
-  warning = FALSE,
-  strip.white = TRUE,
-  tidy = TRUE,
-  highlight = TRUE
-)
-```
-
-## Load packages
-
-```{r, package-loading, message=FALSE}
+``` r
 library(dplyr)
 library(purrr)
 library(tidyr)
@@ -28,9 +13,10 @@ library(hash)
 library(GGally)
 ```
 
-## Constants
+Constants
+---------
 
-```{r, constants}
+``` r
 VALIDATION_THRESHOLD = 3
 
 # Colors for plotting
@@ -47,15 +33,17 @@ COLORS[["ORANGE"]] <- "#F39237"
 options(digits = 2)
 ```
 
-## Set datapath and load `shlab.imgct`
+Set datapath and load `shlab.imgct`
+-----------------------------------
 
-Begin by setting the working directory and important top-level paths to data and 
-loading necessary packages.
+Begin by setting the working directory and important top-level paths to
+data and loading necessary packages.
 
-- NOTE: This will be changed to dynamically account for the package `shlab.imgct` via
-  its GitHub instance later. For now, it is using development loading.
+-   NOTE: This will be changed to dynamically account for the package
+    `shlab.imgct` via its GitHub instance later. For now, it is using
+    development loading.
 
-```{r, shlab-setup, message=FALSE}
+``` r
 # Set the working directory to be part of S Drive (may make dynamic later?)
 # Whilst not dynamic, change for own session if mount point is not equivalent on
 # local machine
@@ -69,9 +57,10 @@ imgct_package_path <- file.path(package_dir, "shlab.imgct")
 devtools::load_all(imgct_package_path)
 ```
 
-## Load category data 
+Load category data
+------------------
 
-```{r, load-category-data}
+``` r
 counted_responses_cols = readr::cols(
   image_id = readr::col_character(),
   .default = readr::col_integer()
@@ -103,11 +92,24 @@ counted_df <- counted_df %>%
 tail(counted_df)
 ```
 
-## Threshold-based Categorization
+    ## # A tibble: 6 x 10
+    ##   image_id Person `Animal/Plant` Object Place Other n_ratings max_rating
+    ##   <chr>     <int>          <int>  <int> <int> <int>     <int>      <int>
+    ## 1 OASIS_s…      0              7      0     0     0         7          7
+    ## 2 OASIS_s…      0              7      0     0     0         7          7
+    ## 3 OASIS_t…      0              0      2     4     1         7          4
+    ## 4 OASIS_t…      0              6      1     0     0         7          6
+    ## 5 OASIS_t…      0              0      7     0     0         7          7
+    ## 6 OASIS_w…      0              0      1     4     2         7          4
+    ## # … with 2 more variables: rel_max_rating <dbl>, htg_index <dbl>
 
-Functions for evaluating the harsh and semi-harsh threshold types of categorization for a given image based on number of responses.
+Threshold-based Categorization
+------------------------------
 
-```{r, define-choose-category-functions}
+Functions for evaluating the harsh and semi-harsh threshold types of
+categorization for a given image based on number of responses.
+
+``` r
 # Function to choose category with harsh threshold for maximum
 #   - Does not allow for ties, only unique maximum as named category or Other.
 choose_category_max_threshold <- function(ratings) {
@@ -132,9 +134,11 @@ choose_category_ties_threshold <- function(ratings) {
 }
 ```
 
-Determine the category dataframe including both the harsh (category_max) and semi-harsh (category_ties) columns, which are character and list of character types respectively.
+Determine the category dataframe including both the harsh
+(category\_max) and semi-harsh (category\_ties) columns, which are
+character and list of character types respectively.
 
-```{r, apply-choose-category-functions}
+``` r
 category_df <- counted_df %>%
   dplyr::mutate(
     
@@ -152,13 +156,30 @@ category_df <- counted_df %>%
     
   ) %>%
   dplyr::select(image_id, category_max, category_ties)
+```
 
+    ## Note: Using an external vector in selections is ambiguous.
+    ## ℹ Use `all_of(category_names)` instead of `category_names` to silence this message.
+    ## ℹ See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
+    ## This message is displayed once per session.
+
+``` r
 head(category_df)
 ```
 
+    ## # A tibble: 6 x 3
+    ##   image_id      category_max category_ties
+    ##   <chr>         <chr>        <chr>        
+    ## 1 IAPS_1033.jpg Animal/Plant Animal/Plant 
+    ## 2 IAPS_1310.jpg Animal/Plant Animal/Plant 
+    ## 3 IAPS_1390.jpg Animal/Plant Animal/Plant 
+    ## 4 IAPS_1617.jpg Animal/Plant Animal/Plant 
+    ## 5 IAPS_1660.jpg Animal/Plant Animal/Plant 
+    ## 6 IAPS_1750.jpg Animal/Plant Animal/Plant
+
 ### Plot Harsh Categories
 
-```{r, plot-harsh-categories}
+``` r
 p <- ggplot(category_df, aes(x=category_max)) +
   geom_bar(color=COLORS[["GRAY"]], fill=COLORS[["BLUE"]], alpha=0.7)
 
@@ -166,9 +187,11 @@ p + labs(title="Distribution of Harsh Categorization Counts", x="Category", y="C
   theme_classic() 
 ```
 
+![](categorizations_files/figure-markdown_github/plot-harsh-categories-1.png)
+
 ### Plot Semi-Harsh Categories
 
-```{r, plot-semi-harsh-categories}
+``` r
 p <- ggplot(category_df, aes(y=category_ties)) +
   geom_bar(color=COLORS[["GRAY"]], fill=COLORS[["ORANGE"]], alpha=0.7)
 
@@ -176,7 +199,9 @@ p + labs(title="Distribution of Semi-Harsh Categorization Counts", x="Count", y=
   theme_classic() 
 ```
 
-```{r, plot-only-ties}
+![](categorizations_files/figure-markdown_github/plot-semi-harsh-categories-1.png)
+
+``` r
 only_ties_df <- category_df %>%
   dplyr::filter(!(category_ties %in% c(category_names)))
 
@@ -187,11 +212,14 @@ p + labs(title="Distribution of Category Ties", x="Count", y="Category") +
   theme_classic()
 ```
 
-## Normalization-based Categorization
+![](categorizations_files/figure-markdown_github/plot-only-ties-1.png)
+
+Normalization-based Categorization
+----------------------------------
 
 ### Sum normalization
 
-```{r, sum-normed-categories}
+``` r
 normalized_sum_df <- counted_df %>%
   dplyr::mutate_at(vars(category_names), ~ . / n_ratings) %>%
   dplyr::select(-c(n_ratings, max_rating))
@@ -199,9 +227,19 @@ normalized_sum_df <- counted_df %>%
 head(normalized_sum_df)
 ```
 
+    ## # A tibble: 6 x 8
+    ##   image_id     Person `Animal/Plant` Object Place Other rel_max_rating htg_index
+    ##   <chr>         <dbl>          <dbl>  <dbl> <dbl> <dbl>          <dbl>     <dbl>
+    ## 1 IAPS_1033.j…      0              1      0     0     0              1         0
+    ## 2 IAPS_1310.j…      0              1      0     0     0              1         0
+    ## 3 IAPS_1390.j…      0              1      0     0     0              1         0
+    ## 4 IAPS_1617.j…      0              1      0     0     0              1         0
+    ## 5 IAPS_1660.j…      0              1      0     0     0              1         0
+    ## 6 IAPS_1750.j…      0              1      0     0     0              1         0
+
 ### Pivot Sum-Normed Categories to Longer
 
-```{r, longer-sum-normed-categories}
+``` r
 norm_sum_long <- normalized_sum_df %>% 
   tidyr::pivot_longer(
     -c(image_id, htg_index),
@@ -216,7 +254,7 @@ norm_sum_long <- normalized_sum_df %>%
 
 ### Plot Sum-Normalization
 
-```{r, plot-sum-normed-categories}
+``` r
 p <- ggplot(norm_sum_long, aes(x=image_sort_id, y=category, alpha=density, size=density)) +
   geom_point(aes(color = htg_index))
 
@@ -244,7 +282,9 @@ p <- p + labs(
 p
 ```
 
-```{r, plot-sum-normed-nonzero-htg}
+![](categorizations_files/figure-markdown_github/plot-sum-normed-categories-1.png)
+
+``` r
 p <- ggplot(norm_sum_long %>% dplyr::filter(htg_index > 0), aes(x=image_sort_id, y=category, alpha=density, size=density)) +
   geom_point(aes(color = htg_index))
 
@@ -272,11 +312,14 @@ p <- p + labs(
 p
 ```
 
+![](categorizations_files/figure-markdown_github/plot-sum-normed-nonzero-htg-1.png)
+
 ### Combine Categorization Methods
 
-Alphabetize categories and combine sum-normed categorizations with harsh threshold categorizations.
+Alphabetize categories and combine sum-normed categorizations with harsh
+threshold categorizations.
 
-```{r, combine-categorization-methods}
+``` r
 alphabetized_category_names <- sort(category_names)
 
 combined_categorization_df <- normalized_sum_df %>%
@@ -293,9 +336,20 @@ combined_categorization_df <- normalized_sum_df %>%
 head(combined_categorization_df)
 ```
 
+    ## # A tibble: 6 x 9
+    ##   `Animal/Plant` Object Other Person Place image_id htg_index category_max
+    ##            <dbl>  <dbl> <dbl>  <dbl> <dbl> <chr>        <dbl> <fct>       
+    ## 1              0      0 0      0.5   0.5   IAPS_22…     0.562 Other       
+    ## 2              0      0 0      0.875 0.125 IAPS_24…     0.234 Person      
+    ## 3              0      0 0.125  0.875 0     IAPS_26…     0.234 Person      
+    ## 4              0      0 0.125  0.875 0     IAPS_30…     0.234 Person      
+    ## 5              0      0 0      0.5   0.5   IAPS_58…     0.562 Other       
+    ## 6              0      0 0.375  0     0.625 IAPS_59…     0.453 Place       
+    ## # … with 1 more variable: category_ties <chr>
+
 ### Plot Categorizations by Parallel Coordinates
 
-```{r, parallel-coordinate-plot-function}
+``` r
 parallel_coordinates_plotter <- function(.category = "Person") { # "Person" default
   combined_categorization_df$alpha <- c(0.01, .1)[
       1 + (alphabetized_category_names %in% .category)
@@ -332,13 +386,15 @@ parallel_coordinates_plotter <- function(.category = "Person") { # "Person" defa
 }
 ```
 
-```{r, plot-all-categorizations-in-parallel-coordinates, message=FALSE, results='hide', fig.keep='all'}
+``` r
 purrr::map(alphabetized_category_names, parallel_coordinates_plotter)
 ```
 
+![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-1.png)![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-2.png)![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-3.png)![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-4.png)![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-5.png)
+
 ### Max-Normalization
 
-```{r, max-normed-categories}
+``` r
 normalized_max_df <- counted_df %>%
   dplyr::mutate_at(vars(category_names), ~ . / max_rating) %>%
   dplyr::select(-c(n_ratings, max_rating))
@@ -346,9 +402,19 @@ normalized_max_df <- counted_df %>%
 head(normalized_max_df)
 ```
 
-###  Pivot Max-Normed Categories to Longer
+    ## # A tibble: 6 x 8
+    ##   image_id     Person `Animal/Plant` Object Place Other rel_max_rating htg_index
+    ##   <chr>         <dbl>          <dbl>  <dbl> <dbl> <dbl>          <dbl>     <dbl>
+    ## 1 IAPS_1033.j…      0              1      0     0     0              1         0
+    ## 2 IAPS_1310.j…      0              1      0     0     0              1         0
+    ## 3 IAPS_1390.j…      0              1      0     0     0              1         0
+    ## 4 IAPS_1617.j…      0              1      0     0     0              1         0
+    ## 5 IAPS_1660.j…      0              1      0     0     0              1         0
+    ## 6 IAPS_1750.j…      0              1      0     0     0              1         0
 
-```{r, plot-max-normed-categories}
+### Pivot Max-Normed Categories to Longer
+
+``` r
 max_long <- normalized_max_df %>% 
   tidyr::pivot_longer(
     -image_id,
@@ -358,3 +424,13 @@ max_long <- normalized_max_df %>%
 
 head(max_long)
 ```
+
+    ## # A tibble: 6 x 3
+    ##   image_id      category       density
+    ##   <chr>         <chr>            <dbl>
+    ## 1 IAPS_1033.jpg Person               0
+    ## 2 IAPS_1033.jpg Animal/Plant         1
+    ## 3 IAPS_1033.jpg Object               0
+    ## 4 IAPS_1033.jpg Place                0
+    ## 5 IAPS_1033.jpg Other                0
+    ## 6 IAPS_1033.jpg rel_max_rating       1

@@ -9,3 +9,5 @@ This list of notebooks outlines the analytical procedure used to evaluate CSN
 images.
 
 - [Validations](./validations.md)
+- [Image Categorizations](./categorizations.md)
+- [Emotion Ratings](./emotion_ratings.md)
