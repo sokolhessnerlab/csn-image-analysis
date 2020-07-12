@@ -1,5 +1,5 @@
-Validate Clean Response Data
-============================
+Validate Response Data
+======================
 
 Load packages
 -------------

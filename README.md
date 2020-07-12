@@ -8,6 +8,13 @@ directory `imgct`.
 This list of notebooks outlines the analytical procedure used to evaluate CSN
 images.
 
-- [Validations](./validations.md)
-- [Image Categorizations](./categorizations.md)
-- [Emotion Ratings](./emotion_ratings.md)
+### Preparing Data
+
+- [Clean Qualtrics Export](./clean_qualtrics_export.md)
+- [Validate Response Data](./validate_response_data)
+
+### Analyzing Data
+
+- [Validations Analysis](./validations.md)
+- [Image Categorizations Analysis](./categorizations.md)
+- [Emotion Ratings Analysis](./emotion_ratings.md)

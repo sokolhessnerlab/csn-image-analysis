@@ -1,5 +1,5 @@
-Clean Qualtrics Survey Exported Data
-====================================
+Clean Qualtrics Export
+======================
 
 Load packages
 -------------

@@ -1,12 +1,12 @@
 ---
-title: "Validate Clean Response Data"
+title: "Validate Response Data"
 author: "Ari Dyckovsky"
 output:
   md_document:
     variant: markdown_github
 ---
 
-# Validate Clean Response Data
+# Validate Response Data
 
 ```{r, setup, include=FALSE}
 knitr::opts_chunk$set(
