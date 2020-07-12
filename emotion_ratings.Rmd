@@ -6,16 +6,18 @@ output:
   html_notebook: default
 ---
 
-# Categorization Analysis
+# Emotionn Rating Analysis
 
 ## Load packages
 
 ```{r}
 library(dplyr)
+library(purrr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
 library(hash)
+library(scales)
 library(readr)
 ```
 
@@ -23,9 +25,19 @@ library(readr)
 
 ```{r}
 # Prevalence measures
-HOMOSEXUAL_PREVALENCE = 0.1
-HETEORSEXUAL_PREVALENCE = 0.9
-HOMOSEXUAL_TAG = "_ho"
+HOMOSEXUAL_PREVALENCE <- 0.1
+HETEORSEXUAL_PREVALENCE <- 0.9
+HOMOSEXUAL_TAG <- "_ho"
+
+# Database details
+DB_SCALES <- hash()
+DB_SCALES[["OASIS"]] <- c(1, 7)
+DB_SCALES[["IAPS"]] <- c(1, 9)
+DB_SCALES[["NAPS_BE"]] <- c(1, 9)
+DB_SCALES[["NAPS_ERO"]] <- c(1, 9)
+
+# Output rating scale
+POS_NEG_RANGE <- c(-1, 1)
 
 # For formatting doubles
 options(digits = 2)
@@ -111,11 +123,23 @@ naps_ero_df <- naps_ero_df %>%
     c(arousal, valence),
     .after = image_id
   )
+
+naps_ero_df
 ```
+
+```{r}
+naps_ero_df %>% summarize(mean = mean(arousal))
+```
+
 
 ## Merge dataframes
 
 ```{r}
+rescale_rating <- function(rating, db) {
+  db_scale <- DB_SCALES[[db]]
+  return(scales::rescale(rating, from = db_scale, to = POS_NEG_RANGE))
+}
+
 all_emotion_ratings_df <- dplyr::bind_rows(
     list(
       oasis_df,
@@ -128,29 +152,37 @@ all_emotion_ratings_df <- dplyr::bind_rows(
   dplyr::select(db_id, image_id, arousal, valence) %>%
   dplyr::mutate_at(
     vars(db_id),
-    ~dplyr::recode(
+    ~ dplyr::recode(
       .,
       "1" = "OASIS",
       "2" = "IAPS",
       "3" = "NAPS_BE",
       "4" = "NAPS_ERO"
     )
+  ) %>%
+  dplyr::mutate(
+    arousal = pmap_dbl(list(arousal, db_id), rescale_rating),
+    valence = pmap_dbl(list(valence, db_id), rescale_rating)
   )
 
 all_emotion_ratings_df
 ```
 
 ```{r}
-p <- ggplot(all_emotion_ratings_df, aes(x=arousal, y=valence, color=db_id)) +
-  geom_point(alpha = 0.5)
+p <- ggplot(all_emotion_ratings_df, aes(x=valence, y=arousal, color=db_id)) +
+  geom_point(alpha = 0.5) +
+  scale_x_continuous(limits = POS_NEG_RANGE) +
+  scale_y_continuous(limits = POS_NEG_RANGE)
 
 p <- p + labs(
-    title = "Valence vs. Arousal of Database Images",
-    x = "Arousal",
-    y = "Valence",
+    title = "Arousal vs. Valence of Database Images",
+    x = "Valence",
+    y = "Arousal",
     color = "Source"
   ) +
-  theme_classic()
+  theme_minimal() +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0)
 
 p
 ```
@@ -165,5 +197,13 @@ readr::write_tsv(
   append = FALSE,
   col_names = TRUE
 )
+```
+
+## Random checks on data
+
+```{r}
+all_emotion_ratings_df %>%
+  dplyr::group_by(db_id) %>%
+  dplyr::count()
 ```
 

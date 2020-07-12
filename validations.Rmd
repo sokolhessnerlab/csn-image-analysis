@@ -2,16 +2,26 @@
 title: "R Notebook for Validation Analysis"
 author: "Ari Dyckovsky"
 output:
-  pdf_document: default
-  html_notebook: default
+  md_document:
+    variant: markdown_github
 ---
 
 # Validation Thresholds Analysis
 
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  strip.white = TRUE,
+  tidy = TRUE,
+  highlight = TRUE
+)
+```
+
 ## Load packages
 
-```{r}
+```{r, package-loading, message=FALSE}
 library(dplyr)
+library(purrr)
 library(tidyr)
 library(ggplot2)
 library(hash)
@@ -19,16 +29,18 @@ library(hash)
 
 ## Constants
 
-```{r}
+```{r, constants}
 # Validation details
 MAX_THRESHOLD <- 5
 THRESHOLD_INDEX <- 1:(MAX_THRESHOLD + 1)
 
 # Colors for plotting
 COLORS <- hash()
+COLORS[["WHITE"]] <- "#FFFFFF"
 COLORS[["BLACK"]] <- "#2F2F2F"
 COLORS[["GRAY"]] <- "#5C6D70"
 COLORS[["BLUE"]] <- "#0E79B2"
+COLORS[["GREEN"]] <- "#6FD08C"
 COLORS[["ORANGE"]] <- "#F39237"
 ```
 
@@ -38,7 +50,7 @@ loading necessary packages.
 - NOTE: This will be changed to dynamically account for the package `shlab.imgct` via
   its GitHub instance later. For now, it is using development loading.
 
-```{r}
+```{r, shlab-setup, message=FALSE}
 # Set the working directory to be part of S Drive (may make dynamic later?)
 # Whilst not dynamic, change for own session if mount point is not equivalent on
 # local machine
@@ -54,13 +66,13 @@ devtools::load_all(imgct_package_path)
 
 Load the dataframe containing each participant and validation totals under the column header named `total_valid`.
 
-```{r}
+```{r, validation-data-loading}
 valid_df <- shlab.imgct::validate_all_participants(datapath)
 ```
 
 Plot the distribution of validation counts across participants.
 
-```{r}
+```{r, plot-validation-counts}
 p <- ggplot(valid_df, aes(x=total_valid)) + 
   geom_histogram(binwidth=1, color=COLORS[["GRAY"]], fill=COLORS[["BLUE"]], alpha=0.7)
 
@@ -72,7 +84,7 @@ p + labs(title="Distribution of Validation Counts", x="Total Valid", y="Count") 
 
 Categorize at each threshold and assign to list, where list element indices are threshold values plus one (to be R-like)
 
-```{r}
+```{r, iterative-categorization}
 ct_df_list <- list()
 ct_df_list <- purrr::map(THRESHOLD_INDEX, function(x) {
   th <- x - 1
@@ -84,7 +96,7 @@ ct_df_list <- purrr::map(THRESHOLD_INDEX, function(x) {
 
 Bind rows of the dataframes from the above list to make a single dataframe with "image_id" and "threshold" behaving as a multi-index of sorts for plotting and analysis. Also, create dataframe "mu" of means of ratings per threshold.
 
-```{r}
+```{r, bind-and-average-categorizations}
 ct_df_bind <- dplyr::bind_rows(ct_df_list[THRESHOLD_INDEX]) %>%
   dplyr::arrange(desc(threshold))
 
@@ -96,7 +108,7 @@ mu <- ct_df_bind %>%
 
 Plot distribution of rating counts relative to each threshold with means.
 
-```{r}
+```{r, plot-ratings-by-threshold}
 p <- ggplot(ct_df_bind , aes(x=n_ratings, fill=threshold)) + 
   geom_histogram(binwidth=1, color=COLORS[["GRAY"]], alpha=0.5, aes(y = ..density..), position="identity") +
   geom_vline(data=mu, aes(xintercept=mu_ratings, color=threshold),
@@ -118,13 +130,14 @@ Above is the distribution of rating counts per image across the six possible val
 
 For all rows in the binded dataframe, calculate the htg_index and assign a column for it.
 
-```{r}
+```{r, include-htg-index}
 htg_df <- ct_df_bind %>%
   dplyr::mutate(
     htg_index = select(., -c(image_id, n_ratings, threshold)) %>%
       purrr::pmap_dbl(~shlab.imgct::calculate_htg_index(c(...)))
-    ) %>%
-  dplyr::mutate_at(vars(n_ratings), funs(as.factor))
+    )
+
+head(htg_df)
 ```
 
 Below are two other visualizations:
@@ -138,8 +151,11 @@ In (1) I’ve included the number of ratings per image as a factor, color-coded 
 - Threshold of 3 leaves of us with 147 participants’ responses out of 187, so 78.6% of responses
 - Threshold of 4 leaves us with 136 participants’ responses out of 187, so 72.7% of responses
 
-```{r}
-p <- ggplot(htg_df, aes(x=threshold, y=htg_index, color=n_ratings)) + 
+```{r, plot-htg-by-threshold}
+factored_htg_df <- htg_df %>%
+  dplyr::mutate_at(vars(n_ratings), list(~ as.factor(.x)))
+
+p <- ggplot(factored_htg_df, aes(x=threshold, y=htg_index, color=n_ratings)) + 
   geom_point(alpha=.3)
 
 p <- p + labs(title="Distribution of Heterogeneity By Threshold", x="Validation Threshold", y="Heterogeneity Index") +
@@ -149,9 +165,109 @@ p <- p + labs(title="Distribution of Heterogeneity By Threshold", x="Validation 
 p
 ```
 
+### Plot Heterogeneity given Threshold
+
+Look at Validation Threshold 3 & 4
+
+```{r, compare-htg-by-threshold}
+threshold_filter <- c(3,4)
+
+htg_pivot_df <- htg_df %>%
+  dplyr::filter(threshold %in% threshold_filter) %>%
+  tidyr::pivot_wider(
+    id_cols = image_id,
+    names_from = c(threshold),
+    names_prefix = c("th_"),
+    names_sort = TRUE,
+    values_from = c(htg_index, n_ratings)
+  ) %>%
+  dplyr::mutate(
+    htg_diff = htg_index_th_4 - htg_index_th_3,
+    n_ratings_diff = n_ratings_th_4 - n_ratings_th_3
+  ) 
+
+p <- ggplot(htg_pivot_df, aes(x=htg_index_th_4, y=htg_index_th_3, size = n_ratings_diff)) +
+  geom_point(color = COLORS[["ORANGE"]], alpha = 0.25)
+
+p <- p + labs(
+    title = "Heteogeneity Index Comparison, Validation Thresholds (3 vs. 4)",
+    x = "Heterogeneity (Validation 4+ of 5)",
+    y = "Heterogeneity (Validation 3+ of 5)",
+    size = expression(paste(Delta, "n_ratings"))
+  ) +
+  scale_size_continuous(range = c(2,.5)) +
+  theme_classic() +
+  theme(
+    legend.position = "right"
+  )
+
+p
+```
+
+### Plot Differences in Heterogeneity 
+
+Consider both directional changes in heterogeneity and number of ratings between validation threshold values
+
+```{r, eval-diffs-htg-and-ratings}
+htg_diff_all_df <- htg_pivot_df %>%
+  dplyr::arrange(desc(-htg_diff)) %>%
+  dplyr::mutate(image_sort_id = match(image_id, unique(image_id))) %>%
+  dplyr::relocate(image_sort_id, .after = image_id) %>%
+  dplyr::select(!contains("_th_"))
+
+htg_diff_nonzero_df <- htg_pivot_df %>%
+  dplyr::filter(htg_diff != 0) %>%
+  dplyr::arrange(desc(-htg_diff)) %>%
+  dplyr::mutate(image_sort_id = match(image_id, unique(image_id))) %>%
+  dplyr::relocate(image_sort_id, .after = image_id) %>%
+  dplyr::select(!contains("_th_"))
+  
+head(htg_diff_all_df) 
+```
+
+```{r, plot-htg-diff-by-threshold}
+p <- ggplot(htg_diff_all_df, aes(x=image_sort_id, y=htg_diff, color=n_ratings_diff)) + 
+  geom_col(alpha=.4)
+
+p <- p + labs(
+    title="Heterogeneity Index Difference Between Validation Thresholds 3 & 4", 
+    x="Images", 
+    y="Heterogeneity Index Difference",
+    color=expression(paste(Delta, "n_ratings"))
+  ) +
+  scale_color_gradient(low = COLORS[["GREEN"]], high = COLORS[["BLUE"]]) +
+  theme_classic() +
+  theme(
+    #axis.text.x = element_blank(),
+    legend.position="right"
+  )
+
+p
+```
+
+```{r, plot-htg-nonzero-by-threshold}
+p <- ggplot(htg_diff_nonzero_df, aes(x=image_sort_id, y=htg_diff, color=n_ratings_diff)) + 
+  geom_col(alpha=.4)
+
+p <- p + labs(
+    title="Heterogeneity Index Difference (Nonzero) Between Validation Thresholds 3 & 4", 
+    x="Images", 
+    y="Heterogeneity Index Difference",
+    color=expression(paste(Delta, "n_ratings"))
+  ) +
+  scale_color_gradient(low = COLORS[["GREEN"]], high = COLORS[["BLUE"]]) +
+  theme_classic() +
+  theme(
+    #axis.text.x = element_blank(),
+    legend.position="right"
+  )
+
+p
+```
+
 Filter for heterogeneity indices of 0, meaning fully homogenous.
 
-```{r}
+```{r, filter-for-homogenous-only}
 htg_0_df <- htg_df %>% 
   dplyr::filter(htg_index == 0) %>%
   dplyr::mutate_at(vars(threshold), funs(as.integer(as.character(.))))
@@ -159,7 +275,7 @@ htg_0_df <- htg_df %>%
 
 Plot the histogram of counts for homogeneity by varying validation threshold.
 
-```{r}
+```{r, plot-homogeneity-by-threshold}
 p <- ggplot(data = htg_0_df , aes(x=threshold)) + 
   geom_histogram(binwidth=1, color=COLORS[["GRAY"]], fill=COLORS[["ORANGE"]], alpha=0.7)
 
@@ -169,17 +285,17 @@ p <- p + labs(title="Distribution of Homogeneity by Threshold", x="Validation Th
 p
 ```
 
-# Participant Response Quality Analysis
+## Participant Response Quality Analysis
 
 Begin by loading all clean blocks and binding them.
 
-```{r}
+```{r, load-clean-responses}
 clean_responses_df_list <- shlab.imgct::load_all_clean_blocks(datapath) 
 ```
 
 Rename all columns to be the trial response number for each participant, inclusive of validation images, as opposed to the particular image name. This avoids confusion, as in this dataframe the images are not consistent across blocks of participants.
 
-```{r}
+```{r, bind-all-clean-responses}
 # from first dataframe element in list, simply extract old_names,
 # then determine new_names via "trial_" pattern that applies generally
 old_names <- names(clean_responses_df_list[[1]] %>% dplyr::select(-participantCode))
@@ -199,7 +315,7 @@ head(all_responses_df)
 
 With a function to get the lengths of consecutive runs for a given vector, compute the longest (max) run. Apply this to a widened ratings dataframe that groups by participantCode, and then summarizes the consecutive maximum runs on ratings for each participant.
 
-```{r}
+```{r, eval-consec-max}
 get_consec_max <- function(vec) {
     with(rle(vec), max(lengths))
 }

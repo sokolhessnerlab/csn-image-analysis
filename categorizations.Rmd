@@ -12,21 +12,26 @@ output:
 
 ```{r}
 library(dplyr)
+library(purrr)
 library(tidyr)
 library(ggplot2)
 library(hash)
+
+library(GGally)
+library(MASS)
 ```
 
 ## Constants
 
 ```{r}
-VALIDATION_THRESHOLD = 4
+VALIDATION_THRESHOLD = 3
 
 # Colors for plotting
 COLORS <- hash()
 COLORS[["WHITE"]] <- "#FFFFFF"
 COLORS[["BLACK"]] <- "#2F2F2F"
 COLORS[["GRAY"]] <- "#5C6D70"
+COLORS[["LIGHT_GRAY"]] <- "#CDD5D1"
 COLORS[["BLUE"]] <- "#0E79B2"
 COLORS[["GREEN"]] <- "#6FD08C"
 COLORS[["ORANGE"]] <- "#F39237"
@@ -75,17 +80,18 @@ category_names <- counted_df %>%
 # Include max_rating for further analyses
 counted_df <- counted_df %>%
   dplyr::mutate(
-    max_rating = pmax(!!!rlang::syms(category_names))    
+    max_rating = pmax(!!!rlang::syms(category_names)),
+    rel_max_rating = max_rating / n_ratings
   )
 
 # Include htg_index
 counted_df <- counted_df %>%
   dplyr::mutate(
-    htg_index = select(., category_names) %>%
+    htg_index = dplyr::select(., category_names) %>%
       purrr::pmap_dbl(~shlab.imgct::calculate_htg_index(c(...)))
     )
 
-head(counted_df)
+tail(counted_df)
 ```
 
 ## Threshold-based Categorization
@@ -194,14 +200,15 @@ norm_sum_long <- normalized_sum_df %>%
     values_to = "density"
   ) %>%
   dplyr::arrange(desc(density), category) %>%
-  dplyr::mutate(sort_id = match(image_id, unique(image_id))) %>%
-  dplyr::arrange(category, desc(density))
+  dplyr::mutate(image_sort_id = match(image_id, unique(image_id))) %>%
+  dplyr::arrange(category, desc(density)) %>%
+  dplyr::relocate(image_sort_id, .after = image_id)
 
 norm_sum_long
 ```
 
 ```{r}
-p <- ggplot(norm_sum_long, aes(x=sort_id, y=category, alpha=density, size=density)) +
+p <- ggplot(norm_sum_long, aes(x=image_sort_id, y=category, alpha=density, size=density)) +
   geom_point(aes(color = htg_index))
 
 p <- p + labs(
@@ -229,7 +236,7 @@ p
 ```
 
 ```{r}
-p <- ggplot(norm_sum_long %>% dplyr::filter(htg_index > 0), aes(x=sort_id, y=category, alpha=density, size=density)) +
+p <- ggplot(norm_sum_long %>% dplyr::filter(htg_index > 0), aes(x=image_sort_id, y=category, alpha=density, size=density)) +
   geom_point(aes(color = htg_index))
 
 p <- p + labs(
@@ -254,6 +261,67 @@ p <- p + labs(
   )
 
 p
+```
+
+### EXPERIMENTAL
+
+MASS-library based visualization of parallel coordinates for showing permutations of categorization ratings per image
+
+```{r}
+alphabetized_category_names <- sort(category_names)
+
+combined_categorization_df <- normalized_sum_df %>%
+  dplyr::inner_join(category_df, by = "image_id") %>%
+  dplyr::select(-c(rel_max_rating)) %>%
+  dplyr::mutate_at(
+    vars(category_max),
+    ~ as.factor(.x)
+  ) %>%
+  dplyr::filter(htg_index != 0) %>%
+  dplyr::relocate(alphabetized_category_names)
+
+combined_categorization_df
+```
+
+```{r}
+parallel_coordinates_plotter <- function(.category = "Person") { # "Person" default
+  combined_categorization_df$alpha <- c(0.01, .1)[
+      1 + (alphabetized_category_names %in% .category)
+    ][combined_categorization_df$category_max]
+  
+  combined_categorization_df$size <- c(0.1)[combined_categorization_df$category_max]
+  
+  color_vec <- c(COLORS[["LIGHT_GRAY"]], COLORS[["BLUE"]])[
+      1 + (alphabetized_category_names %in% .category)
+    ]
+  
+  p <-  GGally::ggparcoord(
+      data = combined_categorization_df,
+      columns = alphabetized_category_names,
+      groupColumn = "category_max",
+      order = 1:(length(alphabetized_category_names) + 1),
+      scale = "globalminmax",
+      showPoints = FALSE,
+      alphaLines = "alpha"
+    )
+  
+  p <- p + labs(
+      title = stringr::str_c("Distributions of Category Rating Permutations (", .category, ")"),
+      x = "Category",
+      y = "Density"
+    ) +
+    scale_color_manual(values = color_vec) +
+    theme_classic() +
+    theme(
+      legend.position = "none"
+    )
+  
+  p
+}
+```
+
+```{r}
+purrr::map(alphabetized_category_names, parallel_coordinates_plotter)
 ```
 
 
