@@ -1,0 +1,28 @@
+---
+title: "Clean Qualtrics Survey Exported Data"
+author: "Ari Dyckovsky"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+# Clean Qualtrics Survey Exported Data
+
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  strip.white = TRUE,
+  tidy = TRUE,
+  highlight = TRUE
+)
+```
+
+## Load packages
+
+```{r, package-loading, message=FALSE}
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(ggplot2)
+library(hash)
+```

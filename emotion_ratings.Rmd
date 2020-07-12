@@ -1,5 +1,5 @@
 ---
-title: "R Notebook for Emotion Rating Database Analysis"
+title: "Emotion Rating Database Analysis"
 author: "Ari Dyckovsky"
 output:
   md_document:
