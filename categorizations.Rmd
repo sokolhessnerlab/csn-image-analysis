@@ -2,15 +2,24 @@
 title: "R Notebook for Categorization Analysis"
 author: "Ari Dyckovsky"
 output:
-  pdf_document: default
-  html_notebook: default
+  md_document:
+    variant: markdown_github
 ---
 
 # Categorization Analysis
 
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  strip.white = TRUE,
+  tidy = TRUE,
+  highlight = TRUE
+)
+```
+
 ## Load packages
 
-```{r}
+```{r, package-loading, message=FALSE}
 library(dplyr)
 library(purrr)
 library(tidyr)
