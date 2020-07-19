@@ -87,7 +87,10 @@ call, TXT files of each image block are loaded to rename columns for
 each block of image categorization rating responses, as Qualtrics also
 unfortunately replaces columns with each block of images surveyed.
 
-`{, clean-qualtrics-export, eval=False} # Here, we demonstrate the underlying Qualtrics-specific method shlab.imgct::clean_qualtrics_export(datapath, filename = QUALTRICS_FILENAME)`
+``` r
+# Here, we demonstrate the underlying Qualtrics-specific method
+shlab.imgct::clean_qualtrics_export(datapath, filename = QUALTRICS_FILENAME)
+```
 
 Using the convenient abstraction `clean`, we can load, parse, and clean
 each block of image categorization rating responses across participants.

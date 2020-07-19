@@ -77,7 +77,7 @@ knitr::kable(head(qualtrics_export_parsed, 5))
 
 The two above demonstrations are included within the function to clean Qualtrics exported survey data for this task. Additionally, the `clean` function is a convenience on top of `clean_qualtrics_export` that (currently) only allows for Qualtrics TSV response data. Within the call, TXT files of each image block are loaded to rename columns for each block of image categorization rating responses, as Qualtrics also unfortunately replaces columns with each block of images surveyed.
 
-```{, clean-qualtrics-export, eval=False}
+```{r, clean-qualtrics-export, eval=FALSE}
 # Here, we demonstrate the underlying Qualtrics-specific method
 shlab.imgct::clean_qualtrics_export(datapath, filename = QUALTRICS_FILENAME)
 ```
