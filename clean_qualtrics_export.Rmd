@@ -26,3 +26,66 @@ library(tidyr)
 library(ggplot2)
 library(hash)
 ```
+
+## Constants
+
+```{r, constants}
+QUALTRICS_FILENAME = "qualtrics.tsv"
+```
+
+## Set datapath and load `shlab.imgct`
+
+Begin by setting the working directory and important top-level paths to data and 
+loading necessary packages.
+
+- NOTE: This will be changed to dynamically account for the package `shlab.imgct` via
+  its GitHub instance later. For now, it is using development loading.
+
+```{r, shlab-setup, message=FALSE}
+# Set the working directory to be part of S Drive (may make dynamic later?)
+# Whilst not dynamic, change for own session if mount point is not equivalent on
+# local machine
+shared_dir <- "~/Projects/shlab/mounts/imgct"
+package_dir <- "~/Projects/shlab"
+
+datapath <- file.path(shared_dir, "csn_images")
+imgct_package_path <- file.path(package_dir, "shlab.imgct")
+
+# Make sure that devtools, tidyverse are installed before this call
+devtools::load_all(imgct_package_path)
+```
+
+## Load Qualtrics TSV 
+
+Using the convience method `shlab.imgct::load_qualtrics_tsv` will load a TSV export of Qualtrics response data collected from the image categorization task. (Please note that the output of this raw dataset is hidden to maintain participant privacy.)
+
+```{r, load-raw-data}
+qualtrics_export <- shlab.imgct::load_qualtrics_tsv(datapath)
+```
+
+## Parse Qualtrics Export
+
+Remove unnecessary columns of data from the Qualtrics exported data, and remove participant rows in which the task was not complete.
+
+```{r, parse-qualtrics}
+qualtrics_export_parsed <- shlab.imgct::parse_qualtrics_export(qualtrics_export)
+
+head(
+  qualtrics_export_parsed
+)
+```
+
+## Clean Qualtrics Export
+
+The two above demonstrations are included within the function to clean Qualtrics exported survey data for this task. Additionally, the `clean` function is a convenience on top of `clean_qualtrics_export` that (currently) only allows for Qualtrics TSV response data. Within the call, TXT files of each image block are loaded to rename columns for each block of image categorization rating responses, as Qualtrics also unfortunately replaces columns with each block of images surveyed.
+
+```{, clean-qualtrics-export, eval=False}
+# Here, we demonstrate the underlying Qualtrics-specific method
+shlab.imgct::clean_qualtrics_export(datapath, filename = QUALTRICS_FILENAME)
+```
+
+Using the convenient abstraction `clean`, we can load, parse, and clean each block of image categorization rating responses across participants. This will, notably, remove any participant that that has errors in their responses, too. If successful, the cleaned blocks will be saved to the `~/datapath/clean` directory.
+
+```{r, clean-qualtrics}
+shlab.imgct::clean(datapath, filename = QUALTRICS_FILENAME)
+```
