@@ -65,14 +65,12 @@ qualtrics_export <- shlab.imgct::load_qualtrics_tsv(datapath)
 
 ## Parse Qualtrics Export
 
-Remove unnecessary columns of data from the Qualtrics exported data, and remove participant rows in which the task was not complete.
+Remove unnecessary columns of data from the Qualtrics exported data, and remove participant rows in which the task was not complete. The output of this function will show the first five participants.
 
 ```{r, parse-qualtrics}
 qualtrics_export_parsed <- shlab.imgct::parse_qualtrics_export(qualtrics_export)
 
-head(
-  qualtrics_export_parsed
-)
+knitr::kable(head(qualtrics_export_parsed, 5))
 ```
 
 ## Clean Qualtrics Export
