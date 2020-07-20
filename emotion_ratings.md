@@ -132,33 +132,33 @@ naps_ero_df <- naps_ero_df %>%
     .after = image_id
   )
 
-head(naps_ero_df)
+knitr::kable(
+  head(naps_ero_df)
+)
 ```
 
-    ## # A tibble: 6 x 11
-    ##   image_id arousal valence arousal_hof valence_hof arousal_hom valence_hom
-    ##   <chr>      <dbl>   <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1 NAPS_ER…    4.22    6.10        4.2         6.6         2.45        4.8 
-    ## 2 NAPS_ER…    5.08    6.60        5.8         7.5         3.05        5.65
-    ## 3 NAPS_ER…    4.90    6.18        5.2         6.95        3.15        5.15
-    ## 4 NAPS_ER…    4.64    6.54        5.45        7.35        2.75        5.5 
-    ## 5 NAPS_ER…    5.03    5.2         3.55        2.85        4.7         3.95
-    ## 6 NAPS_ER…    4.36    6.1         4.35        6.85        2.35        5.35
-    ## # … with 4 more variables: arousal_hef <dbl>, valence_hef <dbl>,
-    ## #   arousal_hem <dbl>, valence_hem <dbl>
+| image\_id                     |  arousal|  valence|  arousal\_hof|  valence\_hof|  arousal\_hom|  valence\_hom|  arousal\_hef|  valence\_hef|  arousal\_hem|  valence\_hem|
+|:------------------------------|--------:|--------:|-------------:|-------------:|-------------:|-------------:|-------------:|-------------:|-------------:|-------------:|
+| NAPS\_ERO\_female\_001\_h.jpg |      4.2|      6.1|           4.2|           6.6|           2.5|           4.8|           3.4|           5.4|           5.3|           6.9|
+| NAPS\_ERO\_female\_002\_h.jpg |      5.1|      6.6|           5.8|           7.5|           3.0|           5.7|           4.5|           5.8|           5.8|           7.4|
+| NAPS\_ERO\_female\_003\_v.jpg |      4.9|      6.2|           5.2|           7.0|           3.1|           5.2|           4.8|           5.4|           5.1|           7.0|
+| NAPS\_ERO\_female\_004\_v.jpg |      4.6|      6.5|           5.5|           7.3|           2.8|           5.5|           3.6|           5.8|           5.8|           7.2|
+| NAPS\_ERO\_female\_005\_v.jpg |      5.0|      5.2|           3.5|           2.9|           4.7|           4.0|           4.7|           4.5|           5.6|           6.2|
+| NAPS\_ERO\_female\_006\_v.jpg |      4.4|      6.1|           4.3|           6.8|           2.4|           5.3|           3.2|           5.1|           5.7|           7.1|
 
 ``` r
-naps_ero_df %>% 
-  summarize(
-    mean_arousal = mean(arousal),
-    mean_valence = mean(valence)
-  )
+knitr::kable(
+  naps_ero_df %>% 
+    summarize(
+      mean_arousal = mean(arousal),
+      mean_valence = mean(valence)
+    )
+)
 ```
 
-    ## # A tibble: 1 x 2
-    ##   mean_arousal mean_valence
-    ##          <dbl>        <dbl>
-    ## 1         4.28         5.36
+|  mean\_arousal|  mean\_valence|
+|--------------:|--------------:|
+|            4.3|            5.4|
 
 Merge dataframes
 ----------------
@@ -194,18 +194,19 @@ all_emotion_ratings_df <- dplyr::bind_rows(
     valence = pmap_dbl(list(valence, db_id), rescale_rating)
   )
 
-head(all_emotion_ratings_df)
+knitr::kable(
+  head(all_emotion_ratings_df)
+)
 ```
 
-    ## # A tibble: 6 x 4
-    ##   db_id image_id            arousal valence
-    ##   <chr> <chr>                 <dbl>   <dbl>
-    ## 1 OASIS OASIS_acorns_1.jpg   -0.551  0.229 
-    ## 2 OASIS OASIS_acorns_2.jpg   -0.591  0.173 
-    ## 3 OASIS OASIS_acorns_3.jpg   -0.564  0.252 
-    ## 4 OASIS OASIS_alcohol_1.jpg  -0.378  0.228 
-    ## 5 OASIS OASIS_alcohol_2.jpg  -0.333  0.0833
-    ## 6 OASIS OASIS_alcohol_3.jpg  -0.551  0.0556
+| db\_id | image\_id             |  arousal|  valence|
+|:-------|:----------------------|--------:|--------:|
+| OASIS  | OASIS\_acorns\_1.jpg  |    -0.55|     0.23|
+| OASIS  | OASIS\_acorns\_2.jpg  |    -0.59|     0.17|
+| OASIS  | OASIS\_acorns\_3.jpg  |    -0.56|     0.25|
+| OASIS  | OASIS\_alcohol\_1.jpg |    -0.38|     0.23|
+| OASIS  | OASIS\_alcohol\_2.jpg |    -0.33|     0.08|
+| OASIS  | OASIS\_alcohol\_3.jpg |    -0.55|     0.06|
 
 ``` r
 p <- ggplot(all_emotion_ratings_df, aes(x=valence, y=arousal, color=db_id)) +
@@ -244,16 +245,16 @@ Other checks on data
 --------------------
 
 ``` r
-all_emotion_ratings_df %>%
-  dplyr::group_by(db_id) %>%
-  dplyr::count()
+knitr::kable(
+  all_emotion_ratings_df %>%
+    dplyr::group_by(db_id) %>%
+    dplyr::count()
+)
 ```
 
-    ## # A tibble: 4 x 2
-    ## # Groups:   db_id [4]
-    ##   db_id        n
-    ##   <chr>    <int>
-    ## 1 IAPS      1165
-    ## 2 NAPS_BE   1356
-    ## 3 NAPS_ERO   200
-    ## 4 OASIS      900
+| db\_id    |     n|
+|:----------|-----:|
+| IAPS      |  1165|
+| NAPS\_BE  |  1356|
+| NAPS\_ERO |   200|
+| OASIS     |   900|

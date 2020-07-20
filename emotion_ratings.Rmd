@@ -137,15 +137,19 @@ naps_ero_df <- naps_ero_df %>%
     .after = image_id
   )
 
-head(naps_ero_df)
+knitr::kable(
+  head(naps_ero_df)
+)
 ```
 
 ```{r, check-naps-ero-means}
-naps_ero_df %>% 
-  summarize(
-    mean_arousal = mean(arousal),
-    mean_valence = mean(valence)
-  )
+knitr::kable(
+  naps_ero_df %>% 
+    summarize(
+      mean_arousal = mean(arousal),
+      mean_valence = mean(valence)
+    )
+)
 ```
 
 ## Merge dataframes
@@ -181,7 +185,9 @@ all_emotion_ratings_df <- dplyr::bind_rows(
     valence = pmap_dbl(list(valence, db_id), rescale_rating)
   )
 
-head(all_emotion_ratings_df)
+knitr::kable(
+  head(all_emotion_ratings_df)
+)
 ```
 
 ```{r, plot-emotion-ratings}
@@ -217,8 +223,10 @@ readr::write_tsv(
 ## Other checks on data
 
 ```{r, quick-checks-on-data}
-all_emotion_ratings_df %>%
-  dplyr::group_by(db_id) %>%
-  dplyr::count()
+knitr::kable(
+  all_emotion_ratings_df %>%
+    dplyr::group_by(db_id) %>%
+    dplyr::count()
+)
 ```
 

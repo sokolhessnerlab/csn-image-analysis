@@ -26,3 +26,81 @@ library(tidyr)
 library(ggplot2)
 library(hash)
 ```
+
+## Set datapath and load `shlab.imgct`
+
+Begin by setting the working directory and important top-level paths to data and 
+loading necessary packages.
+
+- NOTE: This will be changed to dynamically account for the package `shlab.imgct` via
+  its GitHub instance later. For now, it is using development loading.
+
+```{r, shlab-setup, message=FALSE}
+# Set the working directory to be part of S Drive (may make dynamic later?)
+# Whilst not dynamic, change for own session if mount point is not equivalent on
+# local machine
+shared_dir <- "~/Projects/shlab/mounts/imgct"
+package_dir <- "~/Projects/shlab"
+
+datapath <- file.path(shared_dir, "csn_images")
+imgct_package_path <- file.path(package_dir, "shlab.imgct")
+
+# Make sure that devtools, tidyverse are installed before this call
+devtools::load_all(imgct_package_path)
+```
+
+## Validation of All Clean Blocks
+
+The `shlab.imgct` package provides a comprehensive validation method to load and validate all clean blocks of participant responses against a "validation key". This comprehensive method is called `validate_all_participants`. It is a convenient abstraction on top of `load_all_clean_blocks`, `load_key`, `validate_block_participants`, which can be used individually. Below, we first show the use of these underlying methods, but will use the abstraction to handle the data for later analysis needs.
+
+### Load All Clean Blocks
+
+```{r, load-clean-blocks}
+all_clean_blocks <- shlab.imgct::load_all_clean_blocks(datapath)
+```
+
+Example of a loaded clean block by selected the first of the list of loaded dataframes.
+
+```{r, example-clean-block}
+one_clean_block <- all_clean_blocks[[1]]
+
+knitr::kable(
+  one_clean_block
+)
+```
+
+### Load the Validation Key
+
+This method loads a TXT key that is used to compare participant responses to images specified for validation during the task.
+
+```{r, load-validation-key}
+validation_key <- shlab.imgct::load_key(datapath, "validation_key.txt")
+```
+
+What does this key look like when loaded?
+
+```{r, example-validation-key}
+knitr::kable(
+  validation_key
+)
+```
+
+### Validate a Clean Block
+
+Here, we show how to validate a single clean block of participant responses against the validation key.
+
+```{r, validate-one-clean-block}
+one_validated_block <- shlab.imgct::validate_block_participants(one_clean_block, validation_key)
+
+knitr::kable(
+  one_validated_block
+)
+```
+
+### Validate All Participants
+
+Using a similar procedure as above, all clean blocks of participant responses can be validated by `validate_all_participants`, which will also save a TSV to file.
+
+```{r, results='hide'}
+shlab.imgct::validate_all_participants(datapath, key_filename = "validation_key.txt")
+```

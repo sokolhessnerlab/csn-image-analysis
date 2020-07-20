@@ -100,7 +100,9 @@ counted_df <- counted_df %>%
       purrr::pmap_dbl(~shlab.imgct::calculate_htg_index(c(...)))
     )
 
-tail(counted_df)
+knitr::kable(
+  tail(counted_df)
+)
 ```
 
 ## Threshold-based Categorization
@@ -153,7 +155,9 @@ category_df <- counted_df %>%
   ) %>%
   dplyr::select(image_id, category_max, category_ties)
 
-head(category_df)
+knitr::kable(
+  head(category_df)
+)
 ```
 
 ### Plot Harsh Categories
@@ -196,7 +200,9 @@ normalized_sum_df <- counted_df %>%
   dplyr::mutate_at(vars(category_names), ~ . / n_ratings) %>%
   dplyr::select(-c(n_ratings, max_rating))
 
-head(normalized_sum_df)
+knitr::kable(
+  head(normalized_sum_df)
+)
 ```
 
 ### Pivot Sum-Normed Categories to Longer
@@ -290,7 +296,9 @@ combined_categorization_df <- normalized_sum_df %>%
   # relocate by alphabetical order for plotting
   dplyr::relocate(all_of(alphabetized_category_names))
 
-head(combined_categorization_df)
+knitr::kable(
+  head(combined_categorization_df)
+)
 ```
 
 ### Plot Categorizations by Parallel Coordinates
@@ -343,7 +351,9 @@ normalized_max_df <- counted_df %>%
   dplyr::mutate_at(vars(category_names), ~ . / max_rating) %>%
   dplyr::select(-c(n_ratings, max_rating))
 
-head(normalized_max_df)
+knitr::kable(
+  head(normalized_max_df)
+)
 ```
 
 ###  Pivot Max-Normed Categories to Longer
@@ -356,5 +366,7 @@ max_long <- normalized_max_df %>%
     values_to = "density"
   )
 
-head(max_long)
+knitr::kable(
+  head(max_long)
+)
 ```

@@ -142,7 +142,9 @@ htg_df <- ct_df_bind %>%
       purrr::pmap_dbl(~shlab.imgct::calculate_htg_index(c(...)))
     )
 
-head(htg_df)
+knitr::kable(
+  head(htg_df)
+)
 ```
 
 Below are two other visualizations:
@@ -227,7 +229,9 @@ htg_diff_nonzero_df <- htg_pivot_df %>%
   dplyr::relocate(image_sort_id, .after = image_id) %>%
   dplyr::select(!contains("_th_"))
   
-head(htg_diff_all_df) 
+knitr::kable(
+  head(htg_diff_all_df) 
+)
 ```
 
 ```{r, plot-htg-diff-by-threshold}
@@ -303,7 +307,7 @@ Rename all columns to be the trial response number for each participant, inclusi
 ```{r, bind-all-clean-responses}
 # from first dataframe element in list, simply extract old_names,
 # then determine new_names via "trial_" pattern that applies generally
-old_names <- names(clean_responses_df_list[[1]] %>% dplyr::select(-participantCode))
+old_names <- names(clean_responses_df_list[[1]] %>% dplyr::select(-participant_id))
 new_names <- paste("trial", which(old_names %in% old_names), sep="_")
 
 all_responses_df <- clean_responses_df_list %>%
@@ -315,7 +319,9 @@ all_responses_df <- clean_responses_df_list %>%
   }) %>%
   dplyr::bind_rows()
 
-head(all_responses_df)
+knitr::kable(
+  head(all_responses_df)
+)
 ```
 
 With a function to get the lengths of consecutive runs for a given vector, compute the longest (max) run. Apply this to a widened ratings dataframe that groups by participantCode, and then summarizes the consecutive maximum runs on ratings for each participant.
@@ -332,12 +338,14 @@ ratings_df <- all_responses_df %>%
     names_prefix="trial_",
     values_to="rating"
   ) %>%
-  group_by(participantCode)
+  group_by(participant_id)
 
 consecutives_df <- ratings_df %>% 
   dplyr::summarise(consec_max = get_consec_max(rating), .groups = "drop") %>%
   dplyr::arrange(desc(consec_max))
 
-head(consecutives_df)
+knitr::kable(
+  head(consecutives_df)
+)
 ```
 

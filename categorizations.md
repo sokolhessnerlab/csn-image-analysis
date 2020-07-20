@@ -89,19 +89,19 @@ counted_df <- counted_df %>%
       purrr::pmap_dbl(~shlab.imgct::calculate_htg_index(c(...)))
     )
 
-tail(counted_df)
+knitr::kable(
+  tail(counted_df)
+)
 ```
 
-    ## # A tibble: 6 x 10
-    ##   image_id Person `Animal/Plant` Object Place Other n_ratings max_rating
-    ##   <chr>     <int>          <int>  <int> <int> <int>     <int>      <int>
-    ## 1 OASIS_s…      0              7      0     0     0         7          7
-    ## 2 OASIS_s…      0              7      0     0     0         7          7
-    ## 3 OASIS_t…      0              0      2     4     1         7          4
-    ## 4 OASIS_t…      0              6      1     0     0         7          6
-    ## 5 OASIS_t…      0              0      7     0     0         7          7
-    ## 6 OASIS_w…      0              0      1     4     2         7          4
-    ## # … with 2 more variables: rel_max_rating <dbl>, htg_index <dbl>
+| image\_id                  |  Person|  Animal/Plant|  Object|  Place|  Other|  n\_ratings|  max\_rating|  rel\_max\_rating|  htg\_index|
+|:---------------------------|-------:|-------------:|-------:|------:|------:|-----------:|------------:|-----------------:|-----------:|
+| OASIS\_snake\_5.jpg        |       0|             7|       0|      0|      0|           7|            7|              1.00|        0.00|
+| OASIS\_stingray\_3.jpg     |       0|             7|       0|      0|      0|           7|            7|              1.00|        0.00|
+| OASIS\_thunderstorm\_9.jpg |       0|             0|       2|      4|      1|           7|            4|              0.57|        0.59|
+| OASIS\_tiger\_2.jpg        |       0|             6|       1|      0|      0|           7|            6|              0.86|        0.26|
+| OASIS\_toast\_1.jpg        |       0|             0|       7|      0|      0|           7|            7|              1.00|        0.00|
+| OASIS\_wall\_4.jpg         |       0|             0|       1|      4|      2|           7|            4|              0.57|        0.59|
 
 Threshold-based Categorization
 ------------------------------
@@ -164,18 +164,19 @@ category_df <- counted_df %>%
     ## This message is displayed once per session.
 
 ``` r
-head(category_df)
+knitr::kable(
+  head(category_df)
+)
 ```
 
-    ## # A tibble: 6 x 3
-    ##   image_id      category_max category_ties
-    ##   <chr>         <chr>        <chr>        
-    ## 1 IAPS_1033.jpg Animal/Plant Animal/Plant 
-    ## 2 IAPS_1310.jpg Animal/Plant Animal/Plant 
-    ## 3 IAPS_1390.jpg Animal/Plant Animal/Plant 
-    ## 4 IAPS_1617.jpg Animal/Plant Animal/Plant 
-    ## 5 IAPS_1660.jpg Animal/Plant Animal/Plant 
-    ## 6 IAPS_1750.jpg Animal/Plant Animal/Plant
+| image\_id      | category\_max | category\_ties |
+|:---------------|:--------------|:---------------|
+| IAPS\_1033.jpg | Animal/Plant  | Animal/Plant   |
+| IAPS\_1310.jpg | Animal/Plant  | Animal/Plant   |
+| IAPS\_1390.jpg | Animal/Plant  | Animal/Plant   |
+| IAPS\_1617.jpg | Animal/Plant  | Animal/Plant   |
+| IAPS\_1660.jpg | Animal/Plant  | Animal/Plant   |
+| IAPS\_1750.jpg | Animal/Plant  | Animal/Plant   |
 
 ### Plot Harsh Categories
 
@@ -224,18 +225,19 @@ normalized_sum_df <- counted_df %>%
   dplyr::mutate_at(vars(category_names), ~ . / n_ratings) %>%
   dplyr::select(-c(n_ratings, max_rating))
 
-head(normalized_sum_df)
+knitr::kable(
+  head(normalized_sum_df)
+)
 ```
 
-    ## # A tibble: 6 x 8
-    ##   image_id     Person `Animal/Plant` Object Place Other rel_max_rating htg_index
-    ##   <chr>         <dbl>          <dbl>  <dbl> <dbl> <dbl>          <dbl>     <dbl>
-    ## 1 IAPS_1033.j…      0              1      0     0     0              1         0
-    ## 2 IAPS_1310.j…      0              1      0     0     0              1         0
-    ## 3 IAPS_1390.j…      0              1      0     0     0              1         0
-    ## 4 IAPS_1617.j…      0              1      0     0     0              1         0
-    ## 5 IAPS_1660.j…      0              1      0     0     0              1         0
-    ## 6 IAPS_1750.j…      0              1      0     0     0              1         0
+| image\_id      |  Person|  Animal/Plant|  Object|  Place|  Other|  rel\_max\_rating|  htg\_index|
+|:---------------|-------:|-------------:|-------:|------:|------:|-----------------:|-----------:|
+| IAPS\_1033.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1310.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1390.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1617.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1660.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1750.jpg |       0|             1|       0|      0|      0|                 1|           0|
 
 ### Pivot Sum-Normed Categories to Longer
 
@@ -333,19 +335,19 @@ combined_categorization_df <- normalized_sum_df %>%
   # relocate by alphabetical order for plotting
   dplyr::relocate(all_of(alphabetized_category_names))
 
-head(combined_categorization_df)
+knitr::kable(
+  head(combined_categorization_df)
+)
 ```
 
-    ## # A tibble: 6 x 9
-    ##   `Animal/Plant` Object Other Person Place image_id htg_index category_max
-    ##            <dbl>  <dbl> <dbl>  <dbl> <dbl> <chr>        <dbl> <fct>       
-    ## 1              0      0 0      0.5   0.5   IAPS_22…     0.562 Other       
-    ## 2              0      0 0      0.875 0.125 IAPS_24…     0.234 Person      
-    ## 3              0      0 0.125  0.875 0     IAPS_26…     0.234 Person      
-    ## 4              0      0 0.125  0.875 0     IAPS_30…     0.234 Person      
-    ## 5              0      0 0      0.5   0.5   IAPS_58…     0.562 Other       
-    ## 6              0      0 0.375  0     0.625 IAPS_59…     0.453 Place       
-    ## # … with 1 more variable: category_ties <chr>
+|  Animal/Plant|  Object|  Other|  Person|  Place| image\_id      |  htg\_index| category\_max | category\_ties |
+|-------------:|-------:|------:|-------:|------:|:---------------|-----------:|:--------------|:---------------|
+|             0|       0|   0.00|    0.50|   0.50| IAPS\_2217.jpg |        0.56| Other         | Person & Place |
+|             0|       0|   0.00|    0.88|   0.12| IAPS\_2410.jpg |        0.23| Person        | Person         |
+|             0|       0|   0.12|    0.88|   0.00| IAPS\_2681.jpg |        0.23| Person        | Person         |
+|             0|       0|   0.12|    0.88|   0.00| IAPS\_3062.jpg |        0.23| Person        | Person         |
+|             0|       0|   0.00|    0.50|   0.50| IAPS\_5831.jpg |        0.56| Other         | Person & Place |
+|             0|       0|   0.38|    0.00|   0.62| IAPS\_5940.jpg |        0.45| Place         | Place          |
 
 ### Plot Categorizations by Parallel Coordinates
 
@@ -399,18 +401,19 @@ normalized_max_df <- counted_df %>%
   dplyr::mutate_at(vars(category_names), ~ . / max_rating) %>%
   dplyr::select(-c(n_ratings, max_rating))
 
-head(normalized_max_df)
+knitr::kable(
+  head(normalized_max_df)
+)
 ```
 
-    ## # A tibble: 6 x 8
-    ##   image_id     Person `Animal/Plant` Object Place Other rel_max_rating htg_index
-    ##   <chr>         <dbl>          <dbl>  <dbl> <dbl> <dbl>          <dbl>     <dbl>
-    ## 1 IAPS_1033.j…      0              1      0     0     0              1         0
-    ## 2 IAPS_1310.j…      0              1      0     0     0              1         0
-    ## 3 IAPS_1390.j…      0              1      0     0     0              1         0
-    ## 4 IAPS_1617.j…      0              1      0     0     0              1         0
-    ## 5 IAPS_1660.j…      0              1      0     0     0              1         0
-    ## 6 IAPS_1750.j…      0              1      0     0     0              1         0
+| image\_id      |  Person|  Animal/Plant|  Object|  Place|  Other|  rel\_max\_rating|  htg\_index|
+|:---------------|-------:|-------------:|-------:|------:|------:|-----------------:|-----------:|
+| IAPS\_1033.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1310.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1390.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1617.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1660.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| IAPS\_1750.jpg |       0|             1|       0|      0|      0|                 1|           0|
 
 ### Pivot Max-Normed Categories to Longer
 
@@ -422,15 +425,16 @@ max_long <- normalized_max_df %>%
     values_to = "density"
   )
 
-head(max_long)
+knitr::kable(
+  head(max_long)
+)
 ```
 
-    ## # A tibble: 6 x 3
-    ##   image_id      category       density
-    ##   <chr>         <chr>            <dbl>
-    ## 1 IAPS_1033.jpg Person               0
-    ## 2 IAPS_1033.jpg Animal/Plant         1
-    ## 3 IAPS_1033.jpg Object               0
-    ## 4 IAPS_1033.jpg Place                0
-    ## 5 IAPS_1033.jpg Other                0
-    ## 6 IAPS_1033.jpg rel_max_rating       1
+| image\_id      | category         |  density|
+|:---------------|:-----------------|--------:|
+| IAPS\_1033.jpg | Person           |        0|
+| IAPS\_1033.jpg | Animal/Plant     |        1|
+| IAPS\_1033.jpg | Object           |        0|
+| IAPS\_1033.jpg | Place            |        0|
+| IAPS\_1033.jpg | Other            |        0|
+| IAPS\_1033.jpg | rel\_max\_rating |        1|
