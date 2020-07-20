@@ -11,7 +11,7 @@ images.
 ### Preparing Data
 
 - [Clean Qualtrics Export](./clean_qualtrics_export.md)
-- [Validate Response Data](./validate_response_data)
+- [Validate Response Data](./validate_response_data.md)
 
 ### Analyzing Data
 
