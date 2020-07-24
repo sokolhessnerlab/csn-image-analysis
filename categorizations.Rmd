@@ -31,7 +31,7 @@ library(GGally)
 ## Constants
 
 ```{r, constants}
-VALIDATION_THRESHOLD = 3
+VALIDATION_THRESHOLD = 4
 
 # Colors for plotting
 COLORS <- hash()
@@ -140,13 +140,13 @@ Determine the category dataframe including both the harsh (category_max) and sem
 category_df <- counted_df %>%
   dplyr::mutate(
     
-    category_max = dplyr::select(., category_names) %>%
+    category_max = dplyr::select(., all_of(category_names)) %>%
       purrr::pmap_chr(
         ., 
         ~ choose_category_max_threshold(c(...))
       ),
     
-    category_ties = dplyr::select(., category_names) %>%
+    category_ties = dplyr::select(., all_of(category_names)) %>%
       purrr::pmap_chr(
         .,
         ~ choose_category_ties_threshold(c(...))
@@ -299,6 +299,18 @@ combined_categorization_df <- normalized_sum_df %>%
 knitr::kable(
   head(combined_categorization_df)
 )
+```
+
+### Save categorizations to file
+
+```{r, save-categorizations-to-results}
+combined_categorization_df %>%
+  dplyr::relocate(image_id) %>%
+  readr::write_tsv(
+    file.path(datapath, "results", "categorizations.tsv"),
+    append = FALSE,
+    col_names = TRUE
+  )
 ```
 
 ### Plot Categorizations by Parallel Coordinates

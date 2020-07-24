@@ -51,3 +51,24 @@ imgct_package_path <- file.path(package_dir, "shlab.imgct")
 # Make sure that devtools, tidyverse are installed before this call
 devtools::load_all(imgct_package_path)
 ```
+
+```{r, load-results}
+results_path <- file.path(datapath, "results")
+
+categorizations_df <- readr::read_tsv(file.path(results_path, "categorizations.tsv"))
+emotion_ratings_df <- readr::read_tsv(file.path(results_path, "general_emotion_ratings.tsv"))
+```
+
+
+```{r, create-and-save-master-table}
+master_df <- dplyr::left_join(categorizations_df, emotion_ratings_df, by = c("image_id"))
+
+master_df %>%
+  readr::write_tsv(file.path(results_path, "master_table.tsv"),
+                  append = FALSE,
+                  col_names = TRUE)
+
+knitr::kable(
+  head(master_df, 5)
+)
+```

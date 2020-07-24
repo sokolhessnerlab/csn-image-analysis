@@ -35,6 +35,7 @@ Within, six main subdirectories with relevant data types will exist.
 │   └── qualtrics.tsv
 └── results
     ├── all_participant_validations.tsv
+    ├── categorizations.tsv
     ├── categorized_0_valid.tsv
     .   .
     .   . 

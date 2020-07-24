@@ -17,7 +17,7 @@ Constants
 ---------
 
 ``` r
-VALIDATION_THRESHOLD = 3
+VALIDATION_THRESHOLD = 4
 
 # Colors for plotting
 COLORS <- hash()
@@ -96,12 +96,12 @@ knitr::kable(
 
 | image\_id                  |  Person|  Animal/Plant|  Object|  Place|  Other|  n\_ratings|  max\_rating|  rel\_max\_rating|  htg\_index|
 |:---------------------------|-------:|-------------:|-------:|------:|------:|-----------:|------------:|-----------------:|-----------:|
-| OASIS\_snake\_5.jpg        |       0|             7|       0|      0|      0|           7|            7|              1.00|        0.00|
-| OASIS\_stingray\_3.jpg     |       0|             7|       0|      0|      0|           7|            7|              1.00|        0.00|
-| OASIS\_thunderstorm\_9.jpg |       0|             0|       2|      4|      1|           7|            4|              0.57|        0.59|
-| OASIS\_tiger\_2.jpg        |       0|             6|       1|      0|      0|           7|            6|              0.86|        0.26|
-| OASIS\_toast\_1.jpg        |       0|             0|       7|      0|      0|           7|            7|              1.00|        0.00|
-| OASIS\_wall\_4.jpg         |       0|             0|       1|      4|      2|           7|            4|              0.57|        0.59|
+| OASIS\_snake\_5.jpg        |       0|             6|       0|      0|      0|           6|            6|              1.00|        0.00|
+| OASIS\_stingray\_3.jpg     |       0|             6|       0|      0|      0|           6|            6|              1.00|        0.00|
+| OASIS\_thunderstorm\_9.jpg |       0|             0|       1|      4|      1|           6|            4|              0.67|        0.56|
+| OASIS\_tiger\_2.jpg        |       0|             5|       1|      0|      0|           6|            5|              0.83|        0.31|
+| OASIS\_toast\_1.jpg        |       0|             0|       6|      0|      0|           6|            6|              1.00|        0.00|
+| OASIS\_wall\_4.jpg         |       0|             0|       1|      3|      2|           6|            3|              0.50|        0.67|
 
 Threshold-based Categorization
 ------------------------------
@@ -142,13 +142,13 @@ character and list of character types respectively.
 category_df <- counted_df %>%
   dplyr::mutate(
     
-    category_max = dplyr::select(., category_names) %>%
+    category_max = dplyr::select(., all_of(category_names)) %>%
       purrr::pmap_chr(
         ., 
         ~ choose_category_max_threshold(c(...))
       ),
     
-    category_ties = dplyr::select(., category_names) %>%
+    category_ties = dplyr::select(., all_of(category_names)) %>%
       purrr::pmap_chr(
         .,
         ~ choose_category_ties_threshold(c(...))
@@ -156,14 +156,7 @@ category_df <- counted_df %>%
     
   ) %>%
   dplyr::select(image_id, category_max, category_ties)
-```
 
-    ## Note: Using an external vector in selections is ambiguous.
-    ## ℹ Use `all_of(category_names)` instead of `category_names` to silence this message.
-    ## ℹ See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
-    ## This message is displayed once per session.
-
-``` r
 knitr::kable(
   head(category_df)
 )
@@ -224,7 +217,14 @@ Normalization-based Categorization
 normalized_sum_df <- counted_df %>%
   dplyr::mutate_at(vars(category_names), ~ . / n_ratings) %>%
   dplyr::select(-c(n_ratings, max_rating))
+```
 
+    ## Note: Using an external vector in selections is ambiguous.
+    ## ℹ Use `all_of(category_names)` instead of `category_names` to silence this message.
+    ## ℹ See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
+    ## This message is displayed once per session.
+
+``` r
 knitr::kable(
   head(normalized_sum_df)
 )
@@ -342,12 +342,24 @@ knitr::kable(
 
 |  Animal/Plant|  Object|  Other|  Person|  Place| image\_id      |  htg\_index| category\_max | category\_ties |
 |-------------:|-------:|------:|-------:|------:|:---------------|-----------:|:--------------|:---------------|
-|             0|       0|   0.00|    0.50|   0.50| IAPS\_2217.jpg |        0.56| Other         | Person & Place |
-|             0|       0|   0.00|    0.88|   0.12| IAPS\_2410.jpg |        0.23| Person        | Person         |
-|             0|       0|   0.12|    0.88|   0.00| IAPS\_2681.jpg |        0.23| Person        | Person         |
-|             0|       0|   0.12|    0.88|   0.00| IAPS\_3062.jpg |        0.23| Person        | Person         |
-|             0|       0|   0.00|    0.50|   0.50| IAPS\_5831.jpg |        0.56| Other         | Person & Place |
-|             0|       0|   0.38|    0.00|   0.62| IAPS\_5940.jpg |        0.45| Place         | Place          |
+|             0|       0|   0.00|    0.57|   0.43| IAPS\_2217.jpg |        0.51| Person        | Person         |
+|             0|       0|   0.00|    0.86|   0.14| IAPS\_2410.jpg |        0.26| Person        | Person         |
+|             0|       0|   0.14|    0.86|   0.00| IAPS\_2681.jpg |        0.26| Person        | Person         |
+|             0|       0|   0.14|    0.86|   0.00| IAPS\_3062.jpg |        0.26| Person        | Person         |
+|             0|       0|   0.00|    0.57|   0.43| IAPS\_5831.jpg |        0.51| Person        | Person         |
+|             0|       0|   0.43|    0.00|   0.57| IAPS\_5940.jpg |        0.51| Place         | Place          |
+
+### Save categorizations to file
+
+``` r
+combined_categorization_df %>%
+  dplyr::relocate(image_id) %>%
+  readr::write_tsv(
+    file.path(datapath, "results", "categorizations.tsv"),
+    append = FALSE,
+    col_names = TRUE
+  )
+```
 
 ### Plot Categorizations by Parallel Coordinates
 
