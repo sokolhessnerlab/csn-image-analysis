@@ -229,6 +229,60 @@ p
 
 ![](emotion_ratings_files/figure-markdown_github/plot-emotion-ratings-1.png)
 
+Prepare Exotic Image Experimenter Ratings From Codings
+------------------------------------------------------
+
+Uses an intersection method where experimenters must both agree on the
+presence of erotic content in an image to be 1 (yes), otherwise 0 (no).
+
+``` r
+eie_ratings_path = file.path(datapath, "raw", "erotic_image_experimenter_ratings.csv")
+
+eie_df <- readr::read_csv(eie_ratings_path, 
+                col_names = TRUE, 
+                na = c("", "NA"),
+                col_types = cols_only(
+                  db_id = col_character(),
+                  image_id = col_character(),
+                  erotic_coding_psh = col_integer(),
+                  erotic_coding_amd = col_integer()
+                ))
+```
+
+``` r
+intersect_only_eie_df <- eie_df %>%
+  dplyr::mutate(
+    erotic = purrr::pmap_int(
+      dplyr::select(., starts_with("erotic_coding")),
+      ~ (.x == .y) & (.x == 1)
+    )
+  ) %>%
+  dplyr::select(-starts_with("erotic_coding"))
+```
+
+Join Emotion Ratings with Experimenter Erotic Ratings
+-----------------------------------------------------
+
+Join emotion ratings of average `arousal` and `valence`, and `erotic`
+content or not, to make image dataset ready for master table join.
+
+``` r
+all_emotion_ratings_df <- all_emotion_ratings_df %>%
+  dplyr::full_join(intersect_only_eie_df, by = c("db_id", "image_id"))
+
+knitr::kable(
+  head(all_emotion_ratings_df, 5)
+)
+```
+
+| db\_id | image\_id             |  arousal|  valence|  erotic|
+|:-------|:----------------------|--------:|--------:|-------:|
+| OASIS  | OASIS\_acorns\_1.jpg  |    -0.55|     0.23|       0|
+| OASIS  | OASIS\_acorns\_2.jpg  |    -0.59|     0.17|       0|
+| OASIS  | OASIS\_acorns\_3.jpg  |    -0.56|     0.25|       0|
+| OASIS  | OASIS\_alcohol\_1.jpg |    -0.38|     0.23|       0|
+| OASIS  | OASIS\_alcohol\_2.jpg |    -0.33|     0.08|       0|
+
 Save to results as general TSV of arousal and valence ratings
 -------------------------------------------------------------
 
