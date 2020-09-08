@@ -154,22 +154,42 @@ category_df <- counted_df %>%
         ~ choose_category_ties_threshold(c(...))
       )
     
-  ) %>%
-  dplyr::select(image_id, category_max, category_ties)
+  )
 
+# Map the category names to pasted new column names with suffix _is_max,
+# then bind those columns into the original category dataframe,
+# then fill new columns with 0 and 1 values based on whether the category is
+#   a maximum for the image.
+category_df <- all_of(category_names) %>%
+  purrr::map(
+    ~ category_df %>% 
+        dplyr::select(.x) %>%
+        set_names(paste0(.x, "_is_max"))
+  ) %>%
+  dplyr::bind_cols(category_df, .) %>%
+  dplyr::mutate_at(vars(matches("_is_max")), ~ as.integer(.x == max_rating)) %>%
+  dplyr::relocate(matches("_is_max"), .before = n_ratings)
+```
+
+    ## Note: Using an external vector in selections is ambiguous.
+    ## ℹ Use `all_of(.x)` instead of `.x` to silence this message.
+    ## ℹ See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
+    ## This message is displayed once per session.
+
+``` r
 knitr::kable(
   head(category_df)
 )
 ```
 
-| image\_id      | category\_max | category\_ties |
-|:---------------|:--------------|:---------------|
-| IAPS\_1033.jpg | Animal/Plant  | Animal/Plant   |
-| IAPS\_1310.jpg | Animal/Plant  | Animal/Plant   |
-| IAPS\_1390.jpg | Animal/Plant  | Animal/Plant   |
-| IAPS\_1617.jpg | Animal/Plant  | Animal/Plant   |
-| IAPS\_1660.jpg | Animal/Plant  | Animal/Plant   |
-| IAPS\_1750.jpg | Animal/Plant  | Animal/Plant   |
+| image\_id      |  Person|  Animal/Plant|  Object|  Place|  Other|  Person\_is\_max|  Animal/Plant\_is\_max|  Object\_is\_max|  Place\_is\_max|  Other\_is\_max|  n\_ratings|  max\_rating|  rel\_max\_rating|  htg\_index| category\_max | category\_ties |
+|:---------------|-------:|-------------:|-------:|------:|------:|----------------:|----------------------:|----------------:|---------------:|---------------:|-----------:|------------:|-----------------:|-----------:|:--------------|:---------------|
+| IAPS\_1033.jpg |       0|             6|       0|      0|      0|                0|                      1|                0|               0|               0|           6|            6|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1310.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1390.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1617.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1660.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1750.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
 
 ### Plot Harsh Categories
 
@@ -214,37 +234,30 @@ Normalization-based Categorization
 ### Sum normalization
 
 ``` r
-normalized_sum_df <- counted_df %>%
-  dplyr::mutate_at(vars(category_names), ~ . / n_ratings) %>%
+normed_category_df <- category_df %>%
+  dplyr::mutate_at(vars(all_of(category_names)), ~ . / n_ratings) %>%
   dplyr::select(-c(n_ratings, max_rating))
-```
 
-    ## Note: Using an external vector in selections is ambiguous.
-    ## ℹ Use `all_of(category_names)` instead of `category_names` to silence this message.
-    ## ℹ See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
-    ## This message is displayed once per session.
-
-``` r
 knitr::kable(
-  head(normalized_sum_df)
+  head(normed_category_df)
 )
 ```
 
-| image\_id      |  Person|  Animal/Plant|  Object|  Place|  Other|  rel\_max\_rating|  htg\_index|
-|:---------------|-------:|-------------:|-------:|------:|------:|-----------------:|-----------:|
-| IAPS\_1033.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1310.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1390.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1617.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1660.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1750.jpg |       0|             1|       0|      0|      0|                 1|           0|
+| image\_id      |  Person|  Animal/Plant|  Object|  Place|  Other|  Person\_is\_max|  Animal/Plant\_is\_max|  Object\_is\_max|  Place\_is\_max|  Other\_is\_max|  rel\_max\_rating|  htg\_index| category\_max | category\_ties |
+|:---------------|-------:|-------------:|-------:|------:|------:|----------------:|----------------------:|----------------:|---------------:|---------------:|-----------------:|-----------:|:--------------|:---------------|
+| IAPS\_1033.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1310.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1390.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1617.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1660.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+| IAPS\_1750.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
 
 ### Pivot Sum-Normed Categories to Longer
 
 ``` r
-norm_sum_long <- normalized_sum_df %>% 
+normed_category_long_df <- normed_category_df %>% 
   tidyr::pivot_longer(
-    -c(image_id, htg_index),
+    all_of(category_names),
     names_to = "category",
     values_to = "density"
   ) %>%
@@ -257,7 +270,7 @@ norm_sum_long <- normalized_sum_df %>%
 ### Plot Sum-Normalization
 
 ``` r
-p <- ggplot(norm_sum_long, aes(x=image_sort_id, y=category, alpha=density, size=density)) +
+p <- ggplot(normed_category_long_df, aes(x=image_sort_id, y=category, alpha=density, size=density)) +
   geom_point(aes(color = htg_index))
 
 p <- p + labs(
@@ -287,7 +300,7 @@ p
 ![](categorizations_files/figure-markdown_github/plot-sum-normed-categories-1.png)
 
 ``` r
-p <- ggplot(norm_sum_long %>% dplyr::filter(htg_index > 0), aes(x=image_sort_id, y=category, alpha=density, size=density)) +
+p <- ggplot(normed_category_long_df %>% dplyr::filter(htg_index > 0), aes(x=image_sort_id, y=category, alpha=density, size=density)) +
   geom_point(aes(color = htg_index))
 
 p <- p + labs(
@@ -322,17 +335,36 @@ Alphabetize categories and combine sum-normed categorizations with harsh
 threshold categorizations.
 
 ``` r
+normed_category_df
+```
+
+    ## # A tibble: 3,600 x 15
+    ##    image_id Person `Animal/Plant` Object Place Other Person_is_max
+    ##    <chr>     <dbl>          <dbl>  <dbl> <dbl> <dbl>         <int>
+    ##  1 IAPS_10…      0              1      0     0     0             0
+    ##  2 IAPS_13…      0              1      0     0     0             0
+    ##  3 IAPS_13…      0              1      0     0     0             0
+    ##  4 IAPS_16…      0              1      0     0     0             0
+    ##  5 IAPS_16…      0              1      0     0     0             0
+    ##  6 IAPS_17…      0              1      0     0     0             0
+    ##  7 IAPS_19…      0              1      0     0     0             0
+    ##  8 IAPS_20…      1              0      0     0     0             1
+    ##  9 IAPS_20…      1              0      0     0     0             1
+    ## 10 IAPS_20…      1              0      0     0     0             1
+    ## # … with 3,590 more rows, and 8 more variables: `Animal/Plant_is_max` <int>,
+    ## #   Object_is_max <int>, Place_is_max <int>, Other_is_max <int>,
+    ## #   rel_max_rating <dbl>, htg_index <dbl>, category_max <chr>,
+    ## #   category_ties <chr>
+
+``` r
 alphabetized_category_names <- sort(category_names)
 
-combined_categorization_df <- normalized_sum_df %>%
-  dplyr::inner_join(category_df, by = "image_id") %>%
-  dplyr::select(-c(rel_max_rating)) %>%
+combined_categorization_df <- normed_category_df %>%
+  #dplyr::inner_join(category_df, by = "image_id") %>%
   dplyr::mutate_at(
     vars(category_max),
     ~ as.factor(.x)
   ) %>%
-  dplyr::filter(htg_index != 0) %>%
-  # relocate by alphabetical order for plotting
   dplyr::relocate(all_of(alphabetized_category_names))
 
 knitr::kable(
@@ -340,26 +372,14 @@ knitr::kable(
 )
 ```
 
-|  Animal/Plant|  Object|  Other|  Person|  Place| image\_id      |  htg\_index| category\_max | category\_ties |
-|-------------:|-------:|------:|-------:|------:|:---------------|-----------:|:--------------|:---------------|
-|             0|       0|   0.00|    0.57|   0.43| IAPS\_2217.jpg |        0.51| Person        | Person         |
-|             0|       0|   0.00|    0.86|   0.14| IAPS\_2410.jpg |        0.26| Person        | Person         |
-|             0|       0|   0.14|    0.86|   0.00| IAPS\_2681.jpg |        0.26| Person        | Person         |
-|             0|       0|   0.14|    0.86|   0.00| IAPS\_3062.jpg |        0.26| Person        | Person         |
-|             0|       0|   0.00|    0.57|   0.43| IAPS\_5831.jpg |        0.51| Person        | Person         |
-|             0|       0|   0.43|    0.00|   0.57| IAPS\_5940.jpg |        0.51| Place         | Place          |
-
-### Save categorizations to file
-
-``` r
-combined_categorization_df %>%
-  dplyr::relocate(image_id) %>%
-  readr::write_tsv(
-    file.path(datapath, "results", "categorizations.tsv"),
-    append = FALSE,
-    col_names = TRUE
-  )
-```
+|  Animal/Plant|  Object|  Other|  Person|  Place| image\_id      |  Person\_is\_max|  Animal/Plant\_is\_max|  Object\_is\_max|  Place\_is\_max|  Other\_is\_max|  rel\_max\_rating|  htg\_index| category\_max | category\_ties |
+|-------------:|-------:|------:|-------:|------:|:---------------|----------------:|----------------------:|----------------:|---------------:|---------------:|-----------------:|-----------:|:--------------|:---------------|
+|             1|       0|      0|       0|      0| IAPS\_1033.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+|             1|       0|      0|       0|      0| IAPS\_1310.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+|             1|       0|      0|       0|      0| IAPS\_1390.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+|             1|       0|      0|       0|      0| IAPS\_1617.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+|             1|       0|      0|       0|      0| IAPS\_1660.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+|             1|       0|      0|       0|      0| IAPS\_1750.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
 
 ### Plot Categorizations by Parallel Coordinates
 
@@ -406,47 +426,14 @@ purrr::map(alphabetized_category_names, parallel_coordinates_plotter)
 
 ![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-1.png)![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-2.png)![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-3.png)![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-4.png)![](categorizations_files/figure-markdown_github/plot-all-categorizations-in-parallel-coordinates-5.png)
 
-### Max-Normalization
+### Save categorizations to file
 
 ``` r
-normalized_max_df <- counted_df %>%
-  dplyr::mutate_at(vars(category_names), ~ . / max_rating) %>%
-  dplyr::select(-c(n_ratings, max_rating))
-
-knitr::kable(
-  head(normalized_max_df)
-)
-```
-
-| image\_id      |  Person|  Animal/Plant|  Object|  Place|  Other|  rel\_max\_rating|  htg\_index|
-|:---------------|-------:|-------------:|-------:|------:|------:|-----------------:|-----------:|
-| IAPS\_1033.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1310.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1390.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1617.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1660.jpg |       0|             1|       0|      0|      0|                 1|           0|
-| IAPS\_1750.jpg |       0|             1|       0|      0|      0|                 1|           0|
-
-### Pivot Max-Normed Categories to Longer
-
-``` r
-max_long <- normalized_max_df %>% 
-  tidyr::pivot_longer(
-    -image_id,
-    names_to = "category",
-    values_to = "density"
+combined_categorization_df %>%
+  dplyr::relocate(image_id) %>%
+  readr::write_tsv(
+    file.path(datapath, "results", "categorizations.tsv"),
+    append = FALSE,
+    col_names = TRUE
   )
-
-knitr::kable(
-  head(max_long)
-)
 ```
-
-| image\_id      | category         |  density|
-|:---------------|:-----------------|--------:|
-| IAPS\_1033.jpg | Person           |        0|
-| IAPS\_1033.jpg | Animal/Plant     |        1|
-| IAPS\_1033.jpg | Object           |        0|
-| IAPS\_1033.jpg | Place            |        0|
-| IAPS\_1033.jpg | Other            |        0|
-| IAPS\_1033.jpg | rel\_max\_rating |        1|

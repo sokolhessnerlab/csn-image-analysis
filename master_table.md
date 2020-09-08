@@ -53,6 +53,12 @@ categorizations_df <- readr::read_tsv(file.path(results_path, "categorizations.t
     ##   Other = col_double(),
     ##   Person = col_double(),
     ##   Place = col_double(),
+    ##   Person_is_max = col_double(),
+    ##   `Animal/Plant_is_max` = col_double(),
+    ##   Object_is_max = col_double(),
+    ##   Place_is_max = col_double(),
+    ##   Other_is_max = col_double(),
+    ##   rel_max_rating = col_double(),
     ##   htg_index = col_double(),
     ##   category_max = col_character(),
     ##   category_ties = col_character()
@@ -84,10 +90,10 @@ knitr::kable(
 )
 ```
 
-| image\_id      |  Animal/Plant|  Object|      Other|     Person|      Place|  htg\_index| category\_max | category\_ties | db\_id |  arousal|  valence|  erotic|
-|:---------------|-------------:|-------:|----------:|----------:|----------:|-----------:|:--------------|:---------------|:-------|--------:|--------:|-------:|
-| IAPS\_2217.jpg |             0|       0|  0.0000000|  0.5714286|  0.4285714|       0.510| Person        | Person         | IAPS   |  -0.2300|   0.3100|       0|
-| IAPS\_2410.jpg |             0|       0|  0.0000000|  0.8571429|  0.1428571|       0.265| Person        | Person         | IAPS   |  -0.2175|  -0.0950|       0|
-| IAPS\_2681.jpg |             0|       0|  0.1428571|  0.8571429|  0.0000000|       0.265| Person        | Person         | IAPS   |  -0.0075|  -0.2400|       0|
-| IAPS\_3062.jpg |             0|       0|  0.1428571|  0.8571429|  0.0000000|       0.265| Person        | Person         | IAPS   |   0.1950|  -0.7825|       0|
-| IAPS\_5831.jpg |             0|       0|  0.0000000|  0.5714286|  0.4285714|       0.510| Person        | Person         | IAPS   |  -0.1425|   0.6575|       0|
+| image\_id      |  Animal/Plant|  Object|  Other|  Person|  Place|  Person\_is\_max|  Animal/Plant\_is\_max|  Object\_is\_max|  Place\_is\_max|  Other\_is\_max|  rel\_max\_rating|  htg\_index| category\_max | category\_ties | db\_id |  arousal|  valence|  erotic|
+|:---------------|-------------:|-------:|------:|-------:|------:|----------------:|----------------------:|----------------:|---------------:|---------------:|-----------------:|-----------:|:--------------|:---------------|:-------|--------:|--------:|-------:|
+| IAPS\_1033.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |   0.2825|  -0.2825|       0|
+| IAPS\_1310.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |   0.2500|  -0.1000|       0|
+| IAPS\_1390.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |   0.0725|  -0.1250|       0|
+| IAPS\_1617.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |   0.0850|  -0.1925|       0|
+| IAPS\_1660.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |  -0.1075|   0.3725|       0|
