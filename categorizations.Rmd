@@ -132,6 +132,7 @@ choose_category_ties_threshold <- function(ratings) {
     collapse=" & "
   ))
 }
+
 ```
 
 Determine the category dataframe including both the harsh (category_max) and semi-harsh (category_ties) columns, which are character and list of character types respectively.
@@ -152,8 +153,21 @@ category_df <- counted_df %>%
         ~ choose_category_ties_threshold(c(...))
       )
     
+  )
+
+# Map the category names to pasted new column names with suffix _is_max,
+# then bind those columns into the original category dataframe,
+# then fill new columns with 0 and 1 values based on whether the category is
+#   a maximum for the image.
+category_df <- all_of(category_names) %>%
+  purrr::map(
+    ~ category_df %>% 
+        dplyr::select(.x) %>%
+        set_names(paste0(.x, "_is_max"))
   ) %>%
-  dplyr::select(image_id, category_max, category_ties)
+  dplyr::bind_cols(category_df, .) %>%
+  dplyr::mutate_at(vars(matches("_is_max")), ~ as.integer(.x == max_rating)) %>%
+  dplyr::relocate(matches("_is_max"), .before = n_ratings)
 
 knitr::kable(
   head(category_df)
@@ -196,21 +210,21 @@ p + labs(title="Distribution of Category Ties", x="Count", y="Category") +
 ### Sum normalization
 
 ```{r, sum-normed-categories}
-normalized_sum_df <- counted_df %>%
-  dplyr::mutate_at(vars(category_names), ~ . / n_ratings) %>%
+normed_category_df <- category_df %>%
+  dplyr::mutate_at(vars(all_of(category_names)), ~ . / n_ratings) %>%
   dplyr::select(-c(n_ratings, max_rating))
 
 knitr::kable(
-  head(normalized_sum_df)
+  head(normed_category_df)
 )
 ```
 
 ### Pivot Sum-Normed Categories to Longer
 
 ```{r, longer-sum-normed-categories}
-norm_sum_long <- normalized_sum_df %>% 
+normed_category_long_df <- normed_category_df %>% 
   tidyr::pivot_longer(
-    -c(image_id, htg_index),
+    all_of(category_names),
     names_to = "category",
     values_to = "density"
   ) %>%
@@ -223,7 +237,7 @@ norm_sum_long <- normalized_sum_df %>%
 ### Plot Sum-Normalization
 
 ```{r, plot-sum-normed-categories}
-p <- ggplot(norm_sum_long, aes(x=image_sort_id, y=category, alpha=density, size=density)) +
+p <- ggplot(normed_category_long_df, aes(x=image_sort_id, y=category, alpha=density, size=density)) +
   geom_point(aes(color = htg_index))
 
 p <- p + labs(
@@ -251,7 +265,7 @@ p
 ```
 
 ```{r, plot-sum-normed-nonzero-htg}
-p <- ggplot(norm_sum_long %>% dplyr::filter(htg_index > 0), aes(x=image_sort_id, y=category, alpha=density, size=density)) +
+p <- ggplot(normed_category_long_df %>% dplyr::filter(htg_index > 0), aes(x=image_sort_id, y=category, alpha=density, size=density)) +
   geom_point(aes(color = htg_index))
 
 p <- p + labs(
@@ -282,35 +296,25 @@ p
 
 Alphabetize categories and combine sum-normed categorizations with harsh threshold categorizations.
 
+```{r}
+normed_category_df
+```
+
+
 ```{r, combine-categorization-methods}
 alphabetized_category_names <- sort(category_names)
 
-combined_categorization_df <- normalized_sum_df %>%
-  dplyr::inner_join(category_df, by = "image_id") %>%
-  dplyr::select(-c(rel_max_rating)) %>%
+combined_categorization_df <- normed_category_df %>%
+  #dplyr::inner_join(category_df, by = "image_id") %>%
   dplyr::mutate_at(
     vars(category_max),
     ~ as.factor(.x)
   ) %>%
-  dplyr::filter(htg_index != 0) %>%
-  # relocate by alphabetical order for plotting
   dplyr::relocate(all_of(alphabetized_category_names))
 
 knitr::kable(
   head(combined_categorization_df)
 )
-```
-
-### Save categorizations to file
-
-```{r, save-categorizations-to-results}
-combined_categorization_df %>%
-  dplyr::relocate(image_id) %>%
-  readr::write_tsv(
-    file.path(datapath, "results", "categorizations.tsv"),
-    append = FALSE,
-    col_names = TRUE
-  )
 ```
 
 ### Plot Categorizations by Parallel Coordinates
@@ -356,29 +360,14 @@ parallel_coordinates_plotter <- function(.category = "Person") { # "Person" defa
 purrr::map(alphabetized_category_names, parallel_coordinates_plotter)
 ```
 
-### Max-Normalization
+### Save categorizations to file
 
-```{r, max-normed-categories}
-normalized_max_df <- counted_df %>%
-  dplyr::mutate_at(vars(category_names), ~ . / max_rating) %>%
-  dplyr::select(-c(n_ratings, max_rating))
-
-knitr::kable(
-  head(normalized_max_df)
-)
-```
-
-###  Pivot Max-Normed Categories to Longer
-
-```{r, plot-max-normed-categories}
-max_long <- normalized_max_df %>% 
-  tidyr::pivot_longer(
-    -image_id,
-    names_to = "category",
-    values_to = "density"
+```{r, save-categorizations-to-results}
+combined_categorization_df %>%
+  dplyr::relocate(image_id) %>%
+  readr::write_tsv(
+    file.path(datapath, "results", "categorizations.tsv"),
+    append = FALSE,
+    col_names = TRUE
   )
-
-knitr::kable(
-  head(max_long)
-)
 ```
