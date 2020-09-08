@@ -94,14 +94,14 @@ knitr::kable(
 )
 ```
 
-| image\_id                  |  Person|  Animal/Plant|  Object|  Place|  Other|  n\_ratings|  max\_rating|  rel\_max\_rating|  htg\_index|
-|:---------------------------|-------:|-------------:|-------:|------:|------:|-----------:|------------:|-----------------:|-----------:|
-| OASIS\_snake\_5.jpg        |       0|             6|       0|      0|      0|           6|            6|              1.00|        0.00|
-| OASIS\_stingray\_3.jpg     |       0|             6|       0|      0|      0|           6|            6|              1.00|        0.00|
-| OASIS\_thunderstorm\_9.jpg |       0|             0|       1|      4|      1|           6|            4|              0.67|        0.56|
-| OASIS\_tiger\_2.jpg        |       0|             5|       1|      0|      0|           6|            5|              0.83|        0.31|
-| OASIS\_toast\_1.jpg        |       0|             0|       6|      0|      0|           6|            6|              1.00|        0.00|
-| OASIS\_wall\_4.jpg         |       0|             0|       1|      3|      2|           6|            3|              0.50|        0.67|
+| image\_id                  |  person|  animal\_plant|  object|  place|  other|  n\_ratings|  max\_rating|  rel\_max\_rating|  htg\_index|
+|:---------------------------|-------:|--------------:|-------:|------:|------:|-----------:|------------:|-----------------:|-----------:|
+| OASIS\_snake\_5.jpg        |       0|              6|       0|      0|      0|           6|            6|              1.00|        0.00|
+| OASIS\_stingray\_3.jpg     |       0|              6|       0|      0|      0|           6|            6|              1.00|        0.00|
+| OASIS\_thunderstorm\_9.jpg |       0|              0|       1|      4|      1|           6|            4|              0.67|        0.56|
+| OASIS\_tiger\_2.jpg        |       0|              5|       1|      0|      0|           6|            5|              0.83|        0.31|
+| OASIS\_toast\_1.jpg        |       0|              0|       6|      0|      0|           6|            6|              1.00|        0.00|
+| OASIS\_wall\_4.jpg         |       0|              0|       1|      3|      2|           6|            3|              0.50|        0.67|
 
 Threshold-based Categorization
 ------------------------------
@@ -117,7 +117,7 @@ choose_category_max_threshold <- function(ratings) {
   # count number of ratings equal to maximum rating
   n_max <- length(which(ratings == max(ratings)))
   if (n_max > 1) {
-    return("Other")
+    return("other")
   } else {
     return(names(ratings)[which.max(ratings)])
   }
@@ -182,14 +182,14 @@ knitr::kable(
 )
 ```
 
-| image\_id      |  Person|  Animal/Plant|  Object|  Place|  Other|  Person\_is\_max|  Animal/Plant\_is\_max|  Object\_is\_max|  Place\_is\_max|  Other\_is\_max|  n\_ratings|  max\_rating|  rel\_max\_rating|  htg\_index| category\_max | category\_ties |
-|:---------------|-------:|-------------:|-------:|------:|------:|----------------:|----------------------:|----------------:|---------------:|---------------:|-----------:|------------:|-----------------:|-----------:|:--------------|:---------------|
-| IAPS\_1033.jpg |       0|             6|       0|      0|      0|                0|                      1|                0|               0|               0|           6|            6|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1310.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1390.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1617.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1660.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1750.jpg |       0|             7|       0|      0|      0|                0|                      1|                0|               0|               0|           7|            7|                 1|           0| Animal/Plant  | Animal/Plant   |
+| image\_id      |  person|  animal\_plant|  object|  place|  other|  person\_is\_max|  animal\_plant\_is\_max|  object\_is\_max|  place\_is\_max|  other\_is\_max|  n\_ratings|  max\_rating|  rel\_max\_rating|  htg\_index| category\_max | category\_ties |
+|:---------------|-------:|--------------:|-------:|------:|------:|----------------:|-----------------------:|----------------:|---------------:|---------------:|-----------:|------------:|-----------------:|-----------:|:--------------|:---------------|
+| IAPS\_1033.jpg |       0|              6|       0|      0|      0|                0|                       1|                0|               0|               0|           6|            6|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1310.jpg |       0|              7|       0|      0|      0|                0|                       1|                0|               0|               0|           7|            7|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1390.jpg |       0|              7|       0|      0|      0|                0|                       1|                0|               0|               0|           7|            7|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1617.jpg |       0|              7|       0|      0|      0|                0|                       1|                0|               0|               0|           7|            7|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1660.jpg |       0|              7|       0|      0|      0|                0|                       1|                0|               0|               0|           7|            7|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1750.jpg |       0|              7|       0|      0|      0|                0|                       1|                0|               0|               0|           7|            7|                 1|           0| animal\_plant | animal\_plant  |
 
 ### Plot Harsh Categories
 
@@ -243,14 +243,14 @@ knitr::kable(
 )
 ```
 
-| image\_id      |  Person|  Animal/Plant|  Object|  Place|  Other|  Person\_is\_max|  Animal/Plant\_is\_max|  Object\_is\_max|  Place\_is\_max|  Other\_is\_max|  rel\_max\_rating|  htg\_index| category\_max | category\_ties |
-|:---------------|-------:|-------------:|-------:|------:|------:|----------------:|----------------------:|----------------:|---------------:|---------------:|-----------------:|-----------:|:--------------|:---------------|
-| IAPS\_1033.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1310.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1390.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1617.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1660.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-| IAPS\_1750.jpg |       0|             1|       0|      0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+| image\_id      |  person|  animal\_plant|  object|  place|  other|  person\_is\_max|  animal\_plant\_is\_max|  object\_is\_max|  place\_is\_max|  other\_is\_max|  rel\_max\_rating|  htg\_index| category\_max | category\_ties |
+|:---------------|-------:|--------------:|-------:|------:|------:|----------------:|-----------------------:|----------------:|---------------:|---------------:|-----------------:|-----------:|:--------------|:---------------|
+| IAPS\_1033.jpg |       0|              1|       0|      0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1310.jpg |       0|              1|       0|      0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1390.jpg |       0|              1|       0|      0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1617.jpg |       0|              1|       0|      0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1660.jpg |       0|              1|       0|      0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+| IAPS\_1750.jpg |       0|              1|       0|      0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
 
 ### Pivot Sum-Normed Categories to Longer
 
@@ -335,36 +335,9 @@ Alphabetize categories and combine sum-normed categorizations with harsh
 threshold categorizations.
 
 ``` r
-normed_category_df
-```
-
-    ## # A tibble: 3,600 x 15
-    ##    image_id Person `Animal/Plant` Object Place Other Person_is_max
-    ##    <chr>     <dbl>          <dbl>  <dbl> <dbl> <dbl>         <int>
-    ##  1 IAPS_10…      0              1      0     0     0             0
-    ##  2 IAPS_13…      0              1      0     0     0             0
-    ##  3 IAPS_13…      0              1      0     0     0             0
-    ##  4 IAPS_16…      0              1      0     0     0             0
-    ##  5 IAPS_16…      0              1      0     0     0             0
-    ##  6 IAPS_17…      0              1      0     0     0             0
-    ##  7 IAPS_19…      0              1      0     0     0             0
-    ##  8 IAPS_20…      1              0      0     0     0             1
-    ##  9 IAPS_20…      1              0      0     0     0             1
-    ## 10 IAPS_20…      1              0      0     0     0             1
-    ## # … with 3,590 more rows, and 8 more variables: `Animal/Plant_is_max` <int>,
-    ## #   Object_is_max <int>, Place_is_max <int>, Other_is_max <int>,
-    ## #   rel_max_rating <dbl>, htg_index <dbl>, category_max <chr>,
-    ## #   category_ties <chr>
-
-``` r
 alphabetized_category_names <- sort(category_names)
 
 combined_categorization_df <- normed_category_df %>%
-  #dplyr::inner_join(category_df, by = "image_id") %>%
-  dplyr::mutate_at(
-    vars(category_max),
-    ~ as.factor(.x)
-  ) %>%
   dplyr::relocate(all_of(alphabetized_category_names))
 
 knitr::kable(
@@ -372,22 +345,21 @@ knitr::kable(
 )
 ```
 
-|  Animal/Plant|  Object|  Other|  Person|  Place| image\_id      |  Person\_is\_max|  Animal/Plant\_is\_max|  Object\_is\_max|  Place\_is\_max|  Other\_is\_max|  rel\_max\_rating|  htg\_index| category\_max | category\_ties |
-|-------------:|-------:|------:|-------:|------:|:---------------|----------------:|----------------------:|----------------:|---------------:|---------------:|-----------------:|-----------:|:--------------|:---------------|
-|             1|       0|      0|       0|      0| IAPS\_1033.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-|             1|       0|      0|       0|      0| IAPS\_1310.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-|             1|       0|      0|       0|      0| IAPS\_1390.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-|             1|       0|      0|       0|      0| IAPS\_1617.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-|             1|       0|      0|       0|      0| IAPS\_1660.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
-|             1|       0|      0|       0|      0| IAPS\_1750.jpg |                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   |
+|  animal\_plant|  object|  other|  person|  place| image\_id      |  person\_is\_max|  animal\_plant\_is\_max|  object\_is\_max|  place\_is\_max|  other\_is\_max|  rel\_max\_rating|  htg\_index| category\_max | category\_ties |
+|--------------:|-------:|------:|-------:|------:|:---------------|----------------:|-----------------------:|----------------:|---------------:|---------------:|-----------------:|-----------:|:--------------|:---------------|
+|              1|       0|      0|       0|      0| IAPS\_1033.jpg |                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+|              1|       0|      0|       0|      0| IAPS\_1310.jpg |                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+|              1|       0|      0|       0|      0| IAPS\_1390.jpg |                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+|              1|       0|      0|       0|      0| IAPS\_1617.jpg |                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+|              1|       0|      0|       0|      0| IAPS\_1660.jpg |                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
+|              1|       0|      0|       0|      0| IAPS\_1750.jpg |                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  |
 
 ### Plot Categorizations by Parallel Coordinates
 
 ``` r
-parallel_coordinates_plotter <- function(.category = "Person") { # "Person" default
-  combined_categorization_df$alpha <- c(0.01, .1)[
-      1 + (alphabetized_category_names %in% .category)
-    ][combined_categorization_df$category_max]
+parallel_coordinates_plotter <- function(.category = "person") { # "person" default
+  
+  combined_categorization_df$alpha <- c(0.01, .1)[1 + (combined_categorization_df$category_max %in% .category)]
   
   combined_categorization_df$size <- c(0.1)[combined_categorization_df$category_max]
   
@@ -399,7 +371,7 @@ parallel_coordinates_plotter <- function(.category = "Person") { # "Person" defa
       data = combined_categorization_df,
       columns = alphabetized_category_names,
       groupColumn = "category_max",
-      order = 1:(length(alphabetized_category_names) + 1),
+      order = 1:(length(alphabetized_category_names)),
       scale = "globalminmax",
       showPoints = FALSE,
       alphaLines = "alpha"

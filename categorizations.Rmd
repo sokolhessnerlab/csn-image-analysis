@@ -117,7 +117,7 @@ choose_category_max_threshold <- function(ratings) {
   # count number of ratings equal to maximum rating
   n_max <- length(which(ratings == max(ratings)))
   if (n_max > 1) {
-    return("Other")
+    return("other")
   } else {
     return(names(ratings)[which.max(ratings)])
   }
@@ -296,20 +296,10 @@ p
 
 Alphabetize categories and combine sum-normed categorizations with harsh threshold categorizations.
 
-```{r}
-normed_category_df
-```
-
-
 ```{r, combine-categorization-methods}
 alphabetized_category_names <- sort(category_names)
 
 combined_categorization_df <- normed_category_df %>%
-  #dplyr::inner_join(category_df, by = "image_id") %>%
-  dplyr::mutate_at(
-    vars(category_max),
-    ~ as.factor(.x)
-  ) %>%
   dplyr::relocate(all_of(alphabetized_category_names))
 
 knitr::kable(
@@ -320,10 +310,9 @@ knitr::kable(
 ### Plot Categorizations by Parallel Coordinates
 
 ```{r, parallel-coordinate-plot-function}
-parallel_coordinates_plotter <- function(.category = "Person") { # "Person" default
-  combined_categorization_df$alpha <- c(0.01, .1)[
-      1 + (alphabetized_category_names %in% .category)
-    ][combined_categorization_df$category_max]
+parallel_coordinates_plotter <- function(.category = "person") { # "person" default
+  
+  combined_categorization_df$alpha <- c(0.01, .1)[1 + (combined_categorization_df$category_max %in% .category)]
   
   combined_categorization_df$size <- c(0.1)[combined_categorization_df$category_max]
   
@@ -335,7 +324,7 @@ parallel_coordinates_plotter <- function(.category = "Person") { # "Person" defa
       data = combined_categorization_df,
       columns = alphabetized_category_names,
       groupColumn = "category_max",
-      order = 1:(length(alphabetized_category_names) + 1),
+      order = 1:(length(alphabetized_category_names)),
       scale = "globalminmax",
       showPoints = FALSE,
       alphaLines = "alpha"

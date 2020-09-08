@@ -52,7 +52,7 @@ imgct_package_path <- file.path(package_dir, "shlab.imgct")
 devtools::load_all(imgct_package_path)
 ```
 
-```{r, load-results}
+```{r, load-results, }
 results_path <- file.path(datapath, "results")
 
 categorizations_df <- readr::read_tsv(file.path(results_path, "categorizations.tsv"))

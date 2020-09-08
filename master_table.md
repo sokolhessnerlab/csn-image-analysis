@@ -48,16 +48,16 @@ categorizations_df <- readr::read_tsv(file.path(results_path, "categorizations.t
     ## Parsed with column specification:
     ## cols(
     ##   image_id = col_character(),
-    ##   `Animal/Plant` = col_double(),
-    ##   Object = col_double(),
-    ##   Other = col_double(),
-    ##   Person = col_double(),
-    ##   Place = col_double(),
-    ##   Person_is_max = col_double(),
-    ##   `Animal/Plant_is_max` = col_double(),
-    ##   Object_is_max = col_double(),
-    ##   Place_is_max = col_double(),
-    ##   Other_is_max = col_double(),
+    ##   animal_plant = col_double(),
+    ##   object = col_double(),
+    ##   other = col_double(),
+    ##   person = col_double(),
+    ##   place = col_double(),
+    ##   person_is_max = col_double(),
+    ##   animal_plant_is_max = col_double(),
+    ##   object_is_max = col_double(),
+    ##   place_is_max = col_double(),
+    ##   other_is_max = col_double(),
     ##   rel_max_rating = col_double(),
     ##   htg_index = col_double(),
     ##   category_max = col_character(),
@@ -90,10 +90,10 @@ knitr::kable(
 )
 ```
 
-| image\_id      |  Animal/Plant|  Object|  Other|  Person|  Place|  Person\_is\_max|  Animal/Plant\_is\_max|  Object\_is\_max|  Place\_is\_max|  Other\_is\_max|  rel\_max\_rating|  htg\_index| category\_max | category\_ties | db\_id |  arousal|  valence|  erotic|
-|:---------------|-------------:|-------:|------:|-------:|------:|----------------:|----------------------:|----------------:|---------------:|---------------:|-----------------:|-----------:|:--------------|:---------------|:-------|--------:|--------:|-------:|
-| IAPS\_1033.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |   0.2825|  -0.2825|       0|
-| IAPS\_1310.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |   0.2500|  -0.1000|       0|
-| IAPS\_1390.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |   0.0725|  -0.1250|       0|
-| IAPS\_1617.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |   0.0850|  -0.1925|       0|
-| IAPS\_1660.jpg |             1|       0|      0|       0|      0|                0|                      1|                0|               0|               0|                 1|           0| Animal/Plant  | Animal/Plant   | IAPS   |  -0.1075|   0.3725|       0|
+| image\_id      |  animal\_plant|  object|  other|  person|  place|  person\_is\_max|  animal\_plant\_is\_max|  object\_is\_max|  place\_is\_max|  other\_is\_max|  rel\_max\_rating|  htg\_index| category\_max | category\_ties | db\_id |  arousal|  valence|  erotic|
+|:---------------|--------------:|-------:|------:|-------:|------:|----------------:|-----------------------:|----------------:|---------------:|---------------:|-----------------:|-----------:|:--------------|:---------------|:-------|--------:|--------:|-------:|
+| IAPS\_1033.jpg |              1|       0|      0|       0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  | IAPS   |   0.2825|  -0.2825|       0|
+| IAPS\_1310.jpg |              1|       0|      0|       0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  | IAPS   |   0.2500|  -0.1000|       0|
+| IAPS\_1390.jpg |              1|       0|      0|       0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  | IAPS   |   0.0725|  -0.1250|       0|
+| IAPS\_1617.jpg |              1|       0|      0|       0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  | IAPS   |   0.0850|  -0.1925|       0|
+| IAPS\_1660.jpg |              1|       0|      0|       0|      0|                0|                       1|                0|               0|               0|                 1|           0| animal\_plant | animal\_plant  | IAPS   |  -0.1075|   0.3725|       0|
